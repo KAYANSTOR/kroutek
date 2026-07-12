@@ -16,11 +16,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.database.CardRepository
 import com.example.network.SyncService
+import com.example.security.FirebaseManager
 import com.example.ui.*
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.GoldPrimary
@@ -63,6 +66,16 @@ class MainActivity : ComponentActivity() {
 
                 val isActivated by viewModel.isActivated.collectAsState()
                 var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) }
+
+                // 🔥 Firebase: تسجيل الجهاز وفحص Kill Switch
+                val firebaseStatus by remember {
+                    FirebaseManager.observeKillSwitch(context)
+                }.collectAsState(initial = FirebaseManager.DeviceStatus.LOADING)
+
+                // تسجيل أو تحديث بيانات الجهاز في Firebase
+                LaunchedEffect(Unit) {
+                    FirebaseManager.registerOrUpdateDevice(context)
+                }
 
                 // Check and request run-time SMS & notification permissions
                 val requiredPermissions = remember {
@@ -114,6 +127,12 @@ class MainActivity : ComponentActivity() {
                             .background(DeepBlack)
                             .padding(innerPadding)
                     ) {
+                        // 🔴 Kill Switch: إذا حظر الأدمن هذا الجهاز، تُعرض شاشة الحظر فوراً
+                        if (firebaseStatus == FirebaseManager.DeviceStatus.BLOCKED) {
+                            KurotekBlockedScreen()
+                            return@Box
+                        }
+
                         when (currentScreen) {
                             AppScreen.LOGIN -> {
                                 LoginScreen(
