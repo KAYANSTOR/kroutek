@@ -1,0 +1,891 @@
+package com.example.ui
+
+import com.example.feature_approvals.ui.PendingApprovalsTab
+import com.example.feature_customers.ui.SpecialCustomersTab
+import com.example.feature_settings.ui.SettingsTab
+import com.example.feature_reports.ui.ReportsTab
+import com.example.feature_cards.ui.CardsTab
+import com.example.feature_home.ui.HomeTab
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.models.Card
+import com.example.models.CustomerMapping
+import com.example.models.Deposit
+import com.example.models.Transaction
+import com.example.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+import com.example.utils.DocumentExporter
+
+@Composable
+fun MainDashboardScreen(
+    viewModel: MainViewModel,
+    onLogout: () -> Unit
+) {
+    val context = LocalContext.current
+    var selectedTab by remember { mutableStateOf(0) }
+    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
+    val networkName by viewModel.networkName.collectAsState()
+    val allPendingApprovals by viewModel.allPendingApprovals.collectAsState()
+
+    var activeEventNotification by remember { mutableStateOf<com.example.utils.NotificationBus.NewCardExtractedEvent?>(null) }
+    var isCenterMenuOpen by remember { mutableStateOf(false) }
+    var currentSubScreen by remember { mutableStateOf<String?>(null) } // "mikrotik", null
+    val isDistributorModeActive by viewModel.isDistributorModeActive.collectAsState()
+    var distributorInitialTab by remember { mutableStateOf(0) }
+    var showExitConfirmDialog by remember { mutableStateOf(false) }
+
+    // Intercept system Back Press
+    androidx.activity.compose.BackHandler(enabled = true) {
+        if (isCenterMenuOpen) {
+            isCenterMenuOpen = false
+        } else if (currentSubScreen != null) {
+            currentSubScreen = null
+        } else if (selectedTab != 0) {
+            selectedTab = 0
+        } else {
+            showExitConfirmDialog = true
+        }
+    }
+
+    if (showExitConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmDialog = false },
+            title = {
+                Text(
+                    text = "تأكيد الخروج ⚠️",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    text = "هل تريد الخروج من التطبيق بالفعل؟",
+                    color = TextSecondary,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitConfirmDialog = false
+                        (context as? android.app.Activity)?.finish()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimaryRed),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("نعم", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitConfirmDialog = false }
+                ) {
+                    Text("إلغاء", color = TextSecondary, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = SurfaceDark,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        com.example.utils.NotificationBus.newCardExtractedEvents.collect { event ->
+            activeEventNotification = event
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DeepBlack)
+    ) {
+        if (isDistributorModeActive) {
+            DistributorSystemScreen(
+                viewModel = viewModel,
+                initialTab = distributorInitialTab,
+                onBack = { 
+                    // Instead of going back to null subscreen, ask if they want to exit app
+                    showExitConfirmDialog = true
+                }
+            )
+        } else if (currentSubScreen == "mikrotik") {
+            MikrotikGeneratorScreen(
+                viewModel = viewModel,
+                onBack = { currentSubScreen = null }
+            )
+        } else {
+            Scaffold(
+            bottomBar = {
+                // Beautiful Custom Bottom Bar matching the screenshots (4 tabs + floating central button)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(68.dp)
+                        .testTag("dashboard_bottom_nav"),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    // White background card with top rounded corners
+                    Surface(
+                        color = Color.White,
+                        tonalElevation = 0.dp,
+                        shadowElevation = 16.dp,
+                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isDistributorModeActive) {
+                                // Left-most Tab: تقارير الأرباح
+                                BottomNavItem(
+                                    selected = selectedTab == 3,
+                                    onClick = { isCenterMenuOpen = false; selectedTab = 3 },
+                                    icon = Icons.Outlined.BarChart,
+                                    selectedIcon = Icons.Filled.BarChart,
+                                    label = "التقارير"
+                                )
+                                // Left-middle Tab: المالية والمصاريف
+                                BottomNavItem(
+                                    selected = selectedTab == 2,
+                                    onClick = { isCenterMenuOpen = false; selectedTab = 2 },
+                                    icon = Icons.Outlined.AccountBalanceWallet,
+                                    selectedIcon = Icons.Filled.AccountBalanceWallet,
+                                    label = "المالية"
+                                )
+                                // Center Spacer
+                                Box(modifier = Modifier.weight(1f).fillMaxHeight())
+                                // Right-middle Tab: البقالات
+                                BottomNavItem(
+                                    selected = selectedTab == 1,
+                                    onClick = { isCenterMenuOpen = false; selectedTab = 1 },
+                                    icon = Icons.Outlined.Storefront,
+                                    selectedIcon = Icons.Filled.Storefront,
+                                    label = "البقالات"
+                                )
+                                // Right-most Tab: المبيعات والحاسبة
+                                BottomNavItem(
+                                    selected = selectedTab == 0,
+                                    onClick = { isCenterMenuOpen = false; selectedTab = 0 },
+                                    icon = Icons.Outlined.Calculate,
+                                    selectedIcon = Icons.Filled.Calculate,
+                                    label = "المبيعات"
+                                )
+                            } else {
+                                // Left-most Tab: الملف (Settings)
+                                BottomNavItem(
+                                    selected = selectedTab == 5,
+                                    onClick = {
+                                        isCenterMenuOpen = false
+                                        selectedTab = 5
+                                    },
+                                    icon = Icons.Outlined.Person,
+                                    selectedIcon = Icons.Filled.Person,
+                                    label = "الملف"
+                                )
+                                // Left-middle Tab: التقارير (Reports)
+                                BottomNavItem(
+                                    selected = selectedTab == 4,
+                                    onClick = {
+                                        isCenterMenuOpen = false
+                                        selectedTab = 4
+                                    },
+                                    icon = Icons.Outlined.FormatListBulleted,
+                                    selectedIcon = Icons.Filled.FormatListBulleted,
+                                    label = "التقارير"
+                                )
+                                // Center Spacer
+                                Box(modifier = Modifier.weight(1f).fillMaxHeight())
+                                // Right-middle Tab: الخدمات (Services)
+                                BottomNavItem(
+                                    selected = selectedTab == 1,
+                                    onClick = {
+                                        isCenterMenuOpen = false
+                                        selectedTab = 1
+                                    },
+                                    icon = Icons.Outlined.ShoppingBag,
+                                    selectedIcon = Icons.Filled.ShoppingBag,
+                                    label = "الخدمات"
+                                )
+                                // Right-most Tab: الرئيسية (Home)
+                                BottomNavItem(
+                                    selected = selectedTab == 0,
+                                    onClick = {
+                                        isCenterMenuOpen = false
+                                        selectedTab = 0
+                                    },
+                                    icon = Icons.Outlined.Home,
+                                    selectedIcon = Icons.Filled.Home,
+                                    label = "الرئيسية"
+                                )
+                            }
+                        }
+                    }
+
+                    // Circular Floating Center Menu Button (diameter 64dp, half protruding)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-32).dp)
+                            .size(64.dp)
+                            .shadow(elevation = 12.dp, shape = CircleShape)
+                            .background(
+                                color = if (isCenterMenuOpen) Color(0xFF1E293B) else Color(0xFFDC2626),
+                                shape = CircleShape
+                            )
+                            .clickable { isCenterMenuOpen = !isCenterMenuOpen },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isCenterMenuOpen) Icons.Default.Close else Icons.Filled.KeyboardDoubleArrowUp,
+                            contentDescription = "القائمة",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            },
+            containerColor = DeepBlack
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                if (isDistributorModeActive) {
+                    DistributorSystemScreen(
+                        viewModel = viewModel,
+                        selectedTab = selectedTab
+                    )
+                } else {
+                    when (selectedTab) {
+                        0 -> HomeTab(
+                            viewModel = viewModel,
+                            onNavigateToSubScreen = { screen ->
+                                if (screen.startsWith("distributor")) {
+                                    // Should not happen anymore, but handled
+                                    viewModel.setDistributorModeActive(true)
+                                } else {
+                                    currentSubScreen = screen
+                                }
+                            },
+                            onNavigateToTab = { selectedTab = it }
+                        )
+                        1 -> CardsTab(viewModel = viewModel)
+                        2 -> PendingApprovalsTab(viewModel = viewModel)
+                        3 -> SpecialCustomersTab(viewModel = viewModel)
+                        4 -> ReportsTab(viewModel = viewModel)
+                        5 -> SettingsTab(viewModel = viewModel, onLogout = onLogout)
+                    }
+                }
+            }
+        }
+
+        // Animated Central Popover Overlay Menu (matches Screenshot 1's dark 4-card grid overlay)
+        AnimatedVisibility(
+            visible = isCenterMenuOpen,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable { isCenterMenuOpen = false },
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                // Overlay Bottom Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 0.dp)
+                        .clickable(enabled = false) { } // prevent clicks from closing
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "الوصول السريع والخدمات الإضافية",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        )
+
+                        if (isDistributorModeActive) {
+                            // Distributor Center Menu Options
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Card 1: أسعار الموزع
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 4
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(Icons.Default.Settings, contentDescription = null, tint = BrandPrimaryRed, modifier = Modifier.size(28.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("أسعار الموزع", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+
+                                // Card 2: Switch to SMS Mode
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            viewModel.setDistributorModeActive(false)
+                                            Toast.makeText(context, "تم التبديل إلى نظام المحافظ و الـ SMS 🔄", Toast.LENGTH_SHORT).show()
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(28.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("نظام SMS", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Card 3: تفريغ البيانات
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            viewModel.clearAllDistributorData()
+                                            Toast.makeText(context, "🗑️ تم تصفية البيانات بنجاح!", Toast.LENGTH_SHORT).show()
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(Icons.Default.DeleteSweep, contentDescription = null, tint = Color.Red, modifier = Modifier.size(28.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("تصفية البيانات", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                
+                                // Empty spacer card to maintain grid
+                                Spacer(modifier = Modifier.weight(1f).height(100.dp))
+                            }
+                        } else {
+                            // SMS Center Menu Options
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Card 1: التفويضات (Approvals)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 2
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.DoneAll,
+                                                contentDescription = null,
+                                                tint = BrandPrimaryRed,
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                            if (allPendingApprovals.isNotEmpty()) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .offset(x = 10.dp, y = (-10).dp)
+                                                        .background(BrandPrimaryRed, CircleShape)
+                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                ) {
+                                                    Text(
+                                                        text = allPendingApprovals.size.toString(),
+                                                        color = Color.White,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "التفويضات المعلقة",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                // Card 2: العملاء (Special Customers)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 3
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.People,
+                                            contentDescription = null,
+                                            tint = BrandPrimaryRed,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "العملاء الاستثنائيين",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Card 3: إضافة كارت (Add Card quick action)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 1 // takes user to cards tab where they can add cards
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddCard,
+                                            contentDescription = null,
+                                            tint = BrandPrimaryRed,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "إضافة كروت جديدة",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                // Card 4: مزامنة وتحديث (Sync / Refresh action)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            Toast.makeText(context, "🔄 تم تحديث ومزامنة البيانات مع الأجهزة والرسائل بنجاح!", Toast.LENGTH_SHORT).show()
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Sync,
+                                        contentDescription = null,
+                                        tint = BrandPrimaryRed,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "تحديث ومزامنة الكروت",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Large red rounded Close circular floating button matching the bottom layout precisely
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(Color(0xFF0F172A), CircleShape)
+                                .border(BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)), CircleShape)
+                                .clickable { isCenterMenuOpen = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "إغلاق",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (activeEventNotification != null) {
+        val event = activeEventNotification!!
+        val isDark = isDarkTheme
+        val shareMessage = "كود كرت الشحن فئة ${event.amount} ر.ي هو:\n${event.cardDetails}"
+        
+        AlertDialog(
+            onDismissRequest = { activeEventNotification = null },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "🎉 تم استخراج كرت جديد بنجاح",
+                        color = if (isDark) GlowOrangeGold else Color(0xFFE65100),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "تفاصيل العملية المستلمة ومشاركة الكود:",
+                        color = PureWhite,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Card Info Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(SurfaceDark.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text("المبلغ: ${event.amount} ر.ي", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("المحفظة: ${event.walletType}", color = TextSecondary, fontSize = 10.sp)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("الرقم: ${event.recipientPhone}", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            val statusText = if (event.isAutoSent) "تم الإرسال تلقائياً ✔" else "فشل الإرسال التلقائي ⚠️"
+                            val statusColor = if (event.isAutoSent) GlowEmeraldGreen else StatusRed
+                            Text(statusText, color = statusColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = "كود الكرت المستخرج:",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = event.cardDetails,
+                        color = if (isDark) GlowOrangeGold else Color(0xFFE65100),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(SurfaceDark.copy(alpha = 0.8f), RoundedCornerShape(10.dp))
+                            .padding(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Button(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText("Card Details", event.cardDetails)
+                            clipboard.setPrimaryClip(clip)
+
+                            com.example.utils.SmsSender.launchWalletApp(context, event.walletType, shareMessage)
+                            activeEventNotification = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) GlowEmeraldGreen else Color(0xFF2E7D32)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(44.dp)
+                    ) {
+                        Text("مشاركة وفتح تطبيق ${event.walletType} 🚀", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+
+                    Button(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText("Card Details", event.cardDetails)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "تم نسخ كود الكارت بنجاح! 📋", Toast.LENGTH_SHORT).show()
+                            activeEventNotification = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) GlowOrangeGold else Color(0xFFE65100)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(44.dp)
+                    ) {
+                        Text("نسخ الكود فقط 📋", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            activeEventNotification = null
+                        },
+                        border = BorderStroke(1.dp, TextSecondary.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(44.dp)
+                    ) {
+                        Text("إغلاق ✖", fontSize = 11.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
+                    }
+                }
+            },
+            dismissButton = null,
+            containerColor = SurfaceDark,
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.border(BorderStroke(1.5.dp, if (isDarkTheme) Color(0xFF2D2D2D) else Color(0x1F000000)), RoundedCornerShape(20.dp))
+        )
+    }
+}
+}
+
+@Composable
+fun RowScope.BottomNavItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String
+) {
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clickable(
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(44.dp)
+                    .height(26.dp)
+                    .background(
+                        color = if (selected) Color(0xFFDC2626).copy(alpha = 0.1f) else Color.Transparent,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (selected) selectedIcon else icon,
+                    contentDescription = label,
+                    tint = if (selected) Color(0xFFDC2626) else Color(0xFF94A3B8),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
+                color = if (selected) Color(0xFFDC2626) else Color(0xFF94A3B8)
+            )
+        }
+    }
+}
+
+@Composable
+fun DashboardMetricItem(
+    title: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconColor: Color
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1E2B)), // Dark slate card background
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0xFF282C3D)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    color = TextSecondary,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Right
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = value,
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Right
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(iconColor.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}

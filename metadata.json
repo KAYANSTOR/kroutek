@@ -1,0 +1,8 @@
+{
+  "name": "كروتك",
+  "description": "تطبيق كروتك لإدارة الكروت، العملاء، والطلبات المعلقة مع ميزة الإرسال التلقائي الذكي لكروت الميكروتك عبر الرسائل النصية القصيرة (SMS).",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
