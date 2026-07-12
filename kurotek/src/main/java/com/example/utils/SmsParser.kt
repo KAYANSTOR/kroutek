@@ -1,6 +1,20 @@
 package com.example.utils
 
 object SmsParser {
+
+    /**
+     * ✅ المبالغ المقبولة فقط في نظام الكروت.
+     * أي رسالة تحتوي على مبلغ غير موجود في هذه القائمة سيتم تجاهلها تلقائياً.
+     * القيم: 100, 200, 300, 500, 1000, 3000 ريال يمني فقط.
+     */
+    val ALLOWED_AMOUNTS = setOf(100, 200, 300, 500, 1000, 3000)
+
+    /**
+     * تحقق من أن المبلغ ضمن قائمة المبالغ المسموح بها.
+     * @return true إذا كان المبلغ مقبولاً، false إذا كان يجب تجاهل الرسالة.
+     */
+    private fun isAmountAllowed(amount: Int): Boolean = amount in ALLOWED_AMOUNTS
+
     // Regex for Jeeb wallet: Matches amount before "ر.ي" and everything after a dash (phone or account code)
     val jeebRegex = Regex("(\\d+)ر\\.ي.*-(.+)")
     
@@ -34,6 +48,7 @@ object SmsParser {
         val jeebMatch = jeebRegex.find(trimmedMsg)
         if (jeebMatch != null) {
             val amount = jeebMatch.groupValues[1].toIntOrNull() ?: 0
+            if (!isAmountAllowed(amount)) return null // ❌ مبلغ غير مسموح به
             val identifier = jeebMatch.groupValues[2].trim()
             val isPhone = identifier.length == 9 && identifier.all { it.isDigit() }
             return ParsedMessage(amount, identifier, "جيب", !isPhone)
@@ -43,6 +58,7 @@ object SmsParser {
         val jawaliMatch = jawaliRegex.find(trimmedMsg)
         if (jawaliMatch != null) {
             val amount = jawaliMatch.groupValues[1].toIntOrNull() ?: 0
+            if (!isAmountAllowed(amount)) return null // ❌ مبلغ غير مسموح به
             val identifier = jawaliMatch.groupValues[2].trim()
             val isPhone = identifier.length == 9 && identifier.all { it.isDigit() }
             return ParsedMessage(amount, identifier, "جوالي", !isPhone)
@@ -53,6 +69,7 @@ object SmsParser {
         if (kuraimiMatch != null) {
             val identifier = kuraimiMatch.groupValues[1].trim()
             val amount = kuraimiMatch.groupValues[2].toIntOrNull() ?: 0
+            if (!isAmountAllowed(amount)) return null // ❌ مبلغ غير مسموح به
             return ParsedMessage(amount, identifier, "كريمي", true)
         }
 
@@ -61,6 +78,7 @@ object SmsParser {
         if (oneCashMatch != null) {
             val amountDouble = oneCashMatch.groupValues[1].toDoubleOrNull() ?: 0.0
             val amount = amountDouble.toInt()
+            if (!isAmountAllowed(amount)) return null // ❌ مبلغ غير مسموح به
             val identifier = oneCashMatch.groupValues[2].trim()
             return ParsedMessage(amount, identifier, "ون كاش", true)
         }
@@ -69,6 +87,7 @@ object SmsParser {
         val mFloosMatch = mFloosRegex.find(trimmedMsg)
         if (mFloosMatch != null) {
             val amount = mFloosMatch.groupValues[1].toIntOrNull() ?: 0
+            if (!isAmountAllowed(amount)) return null // ❌ مبلغ غير مسموح به
             val identifier = mFloosMatch.groupValues[2].trim()
             return ParsedMessage(amount, identifier, "ام فلوس", true)
         }
@@ -77,6 +96,7 @@ object SmsParser {
         val hasebMatch = hasebRegex.find(trimmedMsg)
         if (hasebMatch != null) {
             val amount = hasebMatch.groupValues[1].toIntOrNull() ?: 0
+            if (!isAmountAllowed(amount)) return null // ❌ مبلغ غير مسموح به
             val identifier = hasebMatch.groupValues[2].trim()
             return ParsedMessage(amount, identifier, "حاسب", true)
         }
@@ -124,7 +144,8 @@ object SmsParser {
                         val identifier = if (amountIndex < identifierIndex) secondGroupVal else firstGroupVal
                         
                         val amount = amountStr.toIntOrNull() ?: 0
-                        if (amount > 0 && identifier.isNotEmpty()) {
+                        if (amount > 0 && isAmountAllowed(amount) && identifier.isNotEmpty()) {
+                            // ✅ المبلغ مسموح به وتم التحقق منه
                             val isPhone = identifier.length == 9 && identifier.all { it.isDigit() }
                             return ParsedMessage(
                                 amount = amount,
