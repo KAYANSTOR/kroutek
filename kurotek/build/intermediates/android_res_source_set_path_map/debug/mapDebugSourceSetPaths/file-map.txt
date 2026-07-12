@@ -1,0 +1,7 @@
+com.example.kurotek-pngs-0 C:\Users\Owner\Downloads\kro\kurotek\build\generated\res\pngs\debug
+com.example.kurotek-updated_navigation_xml-1 C:\Users\Owner\Downloads\kro\kurotek\build\generated\updated_navigation_xml\debug
+com.example.kurotek-packageDebugResources-2 C:\Users\Owner\Downloads\kro\kurotek\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.example.kurotek-packageDebugResources-3 C:\Users\Owner\Downloads\kro\kurotek\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.example.kurotek-debug-4 C:\Users\Owner\Downloads\kro\kurotek\build\intermediates\merged_res\debug\mergeDebugResources
+com.example.kurotek-debug-5 C:\Users\Owner\Downloads\kro\kurotek\src\debug\res
+com.example.kurotek-main-6 C:\Users\Owner\Downloads\kro\kurotek\src\main\res
