@@ -17,3 +17,4 @@ build/
 local.properties
 .env
 debug.keystore
+node_modules
