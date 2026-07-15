@@ -30,7 +30,7 @@ class PendingApprovalReceiver : BroadcastReceiver() {
         val goAsyncPending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val repository = CardRepository(context)
+                val repository = CardRepository.getInstance(context)
                 val pending = repository.getPendingApproval(pendingId)
                 if (pending == null) {
                     goAsyncPending.finish()

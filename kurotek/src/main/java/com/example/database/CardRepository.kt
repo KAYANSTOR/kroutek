@@ -49,6 +49,26 @@ class CardRepository(val context: Context) {
         private const val PREF_PERMISSION_DISMISSED = "permission_dismissed"
         private const val PREF_INITIAL_LOGIN_DONE = "initial_login_done"
         private const val PREF_ACTIVE_SERIAL_KEY = "active_serial_key"
+
+        @Volatile
+        private var INSTANCE: CardRepository? = null
+
+        /**
+         * نقطة الوصول الوحيدة الموصى بها لعمل نسخة من CardRepository.
+         * تضمن وجود نسخة واحدة فقط (Singleton) لكامل عمر التطبيق، بدل إنشاء
+         * نسخ منفصلة مستقلة في كل مكان (كان يحدث سابقاً بشكل منفصل تماماً
+         * في MainActivity و SmsReceiver و PendingApprovalReceiver)، وهو ما
+         * كان يخاطر بتضارب الحالة الداخلية (StateFlow المبنية على
+         * SharedPreferences) بين النسخ المختلفة.
+         *
+         * تُستخدم context.applicationContext دائماً لتفادي أي تسريب لذاكرة
+         * Activity (Memory Leak) عبر الاحتفاظ بمرجع لها داخل Singleton طويل العمر.
+         */
+        fun getInstance(context: Context): CardRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: CardRepository(context.applicationContext).also { INSTANCE = it }
+            }
+        }
     }
 
     // Initial Login / Network Name Configuration completed state

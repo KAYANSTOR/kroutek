@@ -51,7 +51,7 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleMessage(context: Context, message: String) {
-        val repository = CardRepository(context)
+        val repository = CardRepository.getInstance(context)
         
         // Only proceed if the service is turned on in settings
         if (!repository.isServiceEnabled.value) {
