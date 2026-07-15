@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 val context = LocalContext.current
-                val repository = remember { CardRepository(context) }
+                val repository = remember { CardRepository.getInstance(context) }
                 val factory = remember { MainViewModelFactory(repository) }
                 val viewModel: MainViewModel = viewModel(factory = factory)
 
