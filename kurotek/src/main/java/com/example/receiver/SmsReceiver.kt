@@ -51,7 +51,7 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleMessage(context: Context, message: String) {
-        val repository = CardRepository(context)
+        val repository = CardRepository.getInstance(context)
         
         // Only proceed if the service is turned on in settings
         if (!repository.isServiceEnabled.value) {
@@ -137,7 +137,7 @@ class SmsReceiver : BroadcastReceiver() {
 
         if (repository.isAutoSendSmsEnabled.value) {
             // Automatic send (without requiring manual confirmation)
-            val card = repository.getUnusedCardByCategory(amount)
+            val card = repository.claimUnusedCardByCategory(amount)
             if (card != null) {
                 // Formatting card
                 // تفكيك وتنسيق مخرجات نص الكارت لتصبح رأسية بالكامل مع استخدام فواصل الأسطر (\n)
@@ -162,7 +162,6 @@ class SmsReceiver : BroadcastReceiver() {
                 val isSent = com.example.utils.SmsSender.sendSmsInBackground(context, recipientPhone, replyMessage)
                 val logDetails = if (isSent) "$cardDetails (تم الإرسال تلقائياً ✔)" else "$cardDetails (فشل إرسال SMS ✖)"
 
-                repository.markCardAsUsed(card.id)
                 repository.insertTransaction(recipientPhone, amount, logDetails, walletType)
                 repository.insertDeposit(recipientPhone, amount, walletType, isShared = isSent, cardDetails = cardDetails)
 

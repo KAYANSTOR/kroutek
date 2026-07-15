@@ -344,11 +344,8 @@ class MainViewModel(private val repository: CardRepository) : ViewModel() {
                 val walletType = pending.walletType
                 val isAccountCode = pending.isAccountCode || (mappedCustomer != null)
 
-                val card = repository.getUnusedCardByCategory(amount)
+                val card = repository.claimUnusedCardByCategory(amount)
                 if (card != null) {
-                    // Mark card as used immediately
-                    repository.markCardAsUsed(card.id)
-
                     // تفكيك وتنسيق مخرجات نص الكارت لتصبح رأسية بالكامل مع استخدام فواصل الأسطر (\n)
                     // بحيث لا تجتمع التسمية والقيمة في سطر واحد لتجنب تجميع التسمية مع القيمة عملاً بالتعليمات المحددة.
                     val cardDetails = if (card.password.isNotEmpty()) {
@@ -584,10 +581,7 @@ class MainViewModel(private val repository: CardRepository) : ViewModel() {
                 quantities.forEach { (category, qty) ->
                     if (qty > 0) {
                         for (i in 0 until qty) {
-                            val card = repository.getUnusedCardByCategory(category)
-                            if (card != null) {
-                                repository.markCardAsUsed(card.id)
-                            }
+                            repository.claimUnusedCardByCategory(category)
                         }
                     }
                 }
