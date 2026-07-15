@@ -379,6 +379,14 @@ class CardRepository(val context: Context) {
         cardDao.getUnusedCardByCategory(category)
     }
 
+    // الطريقة الآمنة الموصى بها لسحب كرت لبيعه: تسحب وتُعلِّم "مستخدم" في
+    // عملية ذرّية واحدة (انظر CardDao.claimUnusedCardByCategory). يجب استخدام
+    // هذه الدالة بدل استدعاء getUnusedCardByCategory ثم markCardAsUsed كخطوتين
+    // منفصلتين في أي مكان يبيع كرتاً فعلياً لعميل.
+    suspend fun claimUnusedCardByCategory(category: Int): Card? = withContext(Dispatchers.IO) {
+        cardDao.claimUnusedCardByCategory(category)
+    }
+
     suspend fun markCardAsUsed(id: Int) = withContext(Dispatchers.IO) {
         cardDao.markCardAsUsed(id)
     }
