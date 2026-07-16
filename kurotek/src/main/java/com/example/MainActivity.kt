@@ -30,8 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.database.CardRepository
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.network.SyncService
 import com.example.security.FirebaseManager
 import com.example.ui.*
@@ -40,6 +39,7 @@ import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.DeepBlack
 import com.example.ui.theme.SurfaceDark
 import com.example.ui.theme.PureWhite
+import dagger.hilt.android.AndroidEntryPoint
 
 enum class AppScreen {
     LOGIN,
@@ -48,6 +48,7 @@ enum class AppScreen {
     LOGS
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,9 +56,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 val context = LocalContext.current
-                val repository = remember { CardRepository.getInstance(context) }
-                val factory = remember { MainViewModelFactory(repository) }
-                val viewModel: MainViewModel = viewModel(factory = factory)
+                val viewModel: MainViewModel = hiltViewModel()
 
                 val isDarkTheme by viewModel.isDarkTheme.collectAsState()
                 LaunchedEffect(isDarkTheme) {
