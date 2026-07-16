@@ -352,15 +352,15 @@
                     <div class="bg-slate-900/60 border border-slate-800/70 hover:border-pink-500/20 p-5 rounded-2xl text-right flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
                         <div class="flex flex-wrap gap-2 justify-end">
                             <!-- Reset HWID Binding -->
-                            <button onclick="resetDeviceLock(${item.id})" class="text-[10px] font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/20 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors">
+                            <button onclick="resetDeviceLock('${item.id}')" class="text-[10px] font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/20 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors">
                                 إعادة ضبط الهاردوير 🔄
                             </button>
                             <!-- Cancel / Revoke -->
-                            <button onclick="toggleSerial(${item.id})" class="text-[10px] font-bold bg-slate-950 ${item.status === 'REVOKED' ? 'text-amber-400 hover:bg-amber-950/20 border border-amber-500/20' : 'text-rose-400 hover:bg-rose-950/20 border border-rose-500/20'} px-2.5 py-1.5 rounded-lg transition-colors">
+                            <button onclick="toggleSerial('${item.id}')" class="text-[10px] font-bold bg-slate-950 ${item.status === 'REVOKED' ? 'text-amber-400 hover:bg-amber-950/20 border border-amber-500/20' : 'text-rose-400 hover:bg-rose-950/20 border border-rose-500/20'} px-2.5 py-1.5 rounded-lg transition-colors">
                                 ${item.status === 'REVOKED' ? 'إعادة تفعيل' : 'إلغاء وتجميد'}
                             </button>
                             <!-- Permanent Delete -->
-                            <button onclick="deleteSerial(${item.id})" class="text-[10px] font-bold bg-slate-950 hover:bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors">
+                            <button onclick="deleteSerial('${item.id}')" class="text-[10px] font-bold bg-slate-950 hover:bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors">
                                 حذف 🗑️
                             </button>
                         </div>
