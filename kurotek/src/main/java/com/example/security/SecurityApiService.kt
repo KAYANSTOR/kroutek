@@ -14,7 +14,6 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
-import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -60,15 +59,20 @@ object SecurityApiService {
         .build()
 
     // High security HTTP Client with pinned TLS configurations and Strict Timeouts to prevent slow-loris & replay attacks
+    // مهلة انتظار طويلة نسبياً (30 ثانية) بدل 5 — استضافة Render المجانية
+    // (BASE_URL أعلاه) "تنام" بعد فترة خمول وتحتاج حتى 30-50 ثانية لأول
+    // استجابة (Cold Start). كانت هذه المشكلة مخفية سابقاً خلف التحقق
+    // الاحتياطي دون اتصال؛ بعد إزالته (قرار أمني، انظر توثيق validateSerial
+    // أدناه)، أصبح تفادي فشل التفعيل بسبب هذا التأخير ضرورياً لا اختيارياً.
     private val okHttpClient: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.NONE // Disable logging in production for security
         }
 
         OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(5, TimeUnit.SECONDS)
-            .writeTimeout(5, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .build()
     }
@@ -102,9 +106,17 @@ object SecurityApiService {
 
     /**
      * Validates the activation serial.
-     * Attempts server-side validation first (HTTPS + JWT-ready signed payloads).
-     * Automatically falls back to deterministic local cryptographic validation if offline,
-     * or if the custom VPS server has not been configured.
+     * يتصل بالسيرفر حصراً (HTTPS + توقيع HMAC للطلب). لا يوجد أي مسار
+     * تحقق محلي دون اتصال بعد الآن — قرار أمني صريح ومقصود (انظر القسم
+     * 5.4 من docs/RESTRUCTURING_PLAN.md): كان المسار السابق قابلاً للتزوير
+     * الكامل لأن خوارزمية التحقق والـ Salt كانا مكتوبين كنص صريح داخل
+     * كود التطبيق نفسه، ما يجعل أي شخص يفكّ الـ APK قادراً على توليد
+     * تفعيل صالح بلا شراء سيريال حقيقي وبلا أي اتصال بالسيرفر إطلاقاً.
+     *
+     * ⚠️ الأثر العملي: يتطلب التفعيل (إدخال السيريال أول مرة) اتصالاً
+     * فعلياً بالإنترنت والوصول لسيرفر الترخيص. هذا لا يؤثر على الاستخدام
+     * اليومي للتطبيق بعد التفعيل الناجح — حالة "مفعَّل" تُخزَّن محلياً في
+     * CardRepository ولا تُعاد مطالبتها من السيرفر عند كل فتح للتطبيق.
      */
     fun validateSerial(
         context: Context,
@@ -147,64 +159,17 @@ object SecurityApiService {
                             callback(false, body.message ?: "هذا السيريال غير صالح أو منتهي!")
                         }
                     } else {
-                        // Server returned error, or endpoint not set up. Apply secure cryptographic offline fallback.
-                        Log.i(TAG, "Server returned error code ${response.code()}. Falling back to secure offline validation.")
-                        performOfflineValidation(cleanSerial, deviceId, callback)
+                        // السيرفر أعاد خطأً (وليس مشكلة اتصال). لا يوجد مسار احتياطي دون اتصال بعد الآن.
+                        Log.w(TAG, "Server returned error code ${response.code()}. No offline fallback available by design.")
+                        callback(false, "تعذّر التحقق من السيريال حالياً (خطأ من السيرفر). يرجى المحاولة لاحقاً أو التواصل مع الدعم.")
                     }
                 }
 
                 override fun onFailure(call: Call<SerialValidationResponse>, t: Throwable) {
-                    // Timeout, No internet, or Server offline. Apply secure cryptographic offline fallback.
-                    Log.i(TAG, "Server request failed: ${t.message}. Falling back to secure offline validation.")
-                    performOfflineValidation(cleanSerial, deviceId, callback)
+                    // انقطاع اتصال أو مهلة انتظار. لا يوجد مسار احتياطي دون اتصال بعد الآن — بقرار أمني صريح.
+                    Log.w(TAG, "Server request failed: ${t.message}. No offline fallback available by design.")
+                    callback(false, "يتطلب تفعيل التطبيق اتصالاً بالإنترنت. يرجى التحقق من اتصال شبكتك والمحاولة مجدداً.")
                 }
             })
-    }
-
-    /**
-     * Performs cryptographic verification completely offline.
-     * Compares the signature token part in the serial with the SHA-256 hash of the device ID + custom salt.
-     * Extremely secure and fully bound to the specific physical device.
-     */
-    private fun performOfflineValidation(serial: String, deviceId: String, callback: (Boolean, String) -> Unit) {
-        // Serial format should be: IDENTIFIER-KS[CHECKSUM_FINGERPRINT]
-        if (!serial.contains("-KS")) {
-            callback(false, "السيريال غير صحيح! يرجى التحقق من الصيغة.")
-            return
-        }
-
-        val parts = serial.split("-KS")
-        if (parts.size != 2) {
-            callback(false, "صيغة السيريال غير صالحة!")
-            return
-        }
-
-        val identifier = parts[0].trim().uppercase()
-        val signatureHash = parts[1].trim().uppercase()
-
-        if (identifier.isEmpty() || signatureHash.isEmpty()) {
-            callback(false, "صيغة السيريال غير مكتملة!")
-            return
-        }
-
-        // Validate that this serial identifier belongs to the device or has been registered properly
-        // To bind this serial strictly to this physical Device ID:
-        // Expected hash is computed as SHA-256 of: DEVICE_ID + SALT
-        val salt = "KayanSoftSecureSalt2026"
-        val raw = deviceId.trim().uppercase() + salt
-        
-        try {
-            val digest = MessageDigest.getInstance("SHA-256")
-            val hashBytes = digest.digest(raw.toByteArray(Charsets.UTF_8))
-            val expectedHash = hashBytes.joinToString("") { String.format("%02X", it.toInt() and 0xFF) }.take(6)
-
-            if (signatureHash == expectedHash) {
-                callback(true, "تم تفعيل التطبيق بنجاح في الوضع الآمن دون إنترنت! 🔑")
-            } else {
-                callback(false, "هذا السيريال مخصص لجهاز آخر ولا يمكن تفعيله على هذا الهاتف! 🔒")
-            }
-        } catch (e: Exception) {
-            callback(false, "خطأ في تأكيد التشفير.")
-        }
     }
 }
