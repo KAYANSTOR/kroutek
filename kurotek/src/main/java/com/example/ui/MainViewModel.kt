@@ -9,11 +9,14 @@ import com.example.models.Card
 import com.example.models.Transaction
 import com.example.models.PendingApproval
 import com.example.models.CustomerMapping
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(private val repository: CardRepository) : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor(private val repository: CardRepository) : ViewModel() {
 
     // Simple session login status
     private val _isLoggedIn = MutableStateFlow(false)
@@ -696,6 +699,10 @@ class MainViewModel(private val repository: CardRepository) : ViewModel() {
     }
 }
 
+// ملاحظة: بعد تحويل MainViewModel لـ @HiltViewModel، لم يعد MainActivity
+// يستخدم هذا المصنع (يستخدم hiltViewModel() مباشرة بدلاً منه). أُبقي عليه هنا
+// دون حذف تجنباً لأي كسر لأي استخدام آخر محتمل غير مرصود في هذا الفحص،
+// ويمكن حذفه لاحقاً بعد التأكد الكامل من عدم استخدامه في أي مكان.
 class MainViewModelFactory(private val repository: CardRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
