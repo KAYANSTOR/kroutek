@@ -1,4 +1,4 @@
-﻿package com.example.feature_cards.ui
+package com.example.feature_cards.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -40,19 +40,24 @@ import android.net.Uri
 import android.util.Log
 import java.io.File
 import java.nio.charset.StandardCharsets
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.ui.SettingsViewModel
+
 // ==========================================
 // TAB 2: الكروت (Cards Tab)
 // ==========================================
 @Composable
-fun CardsTab(viewModel: MainViewModel) {
+fun CardsTab(
+    inventoryViewModel: com.example.ui.InventoryViewModel,
+    salesViewModel: com.example.ui.SalesViewModel,
+    smsViewModel: com.example.ui.SettingsViewModel,
+    mainViewModel: com.example.ui.MainViewModel
+) {
     val context = LocalContext.current
-    val isAutoSendSmsEnabled by viewModel.isAutoSendSmsEnabled.collectAsState()
-    val allCards by viewModel.allCards.collectAsState()
-    val isDark by viewModel.isDarkTheme.collectAsState()
+    val isAutoSendSmsEnabled by smsViewModel.isAutoSendSmsEnabled.collectAsState()
+    val allCards by inventoryViewModel.allCards.collectAsState()
+    val isDark by mainViewModel.isDarkTheme.collectAsState()
     
-    // Form States
     var selectedCategoryForAdding by remember { mutableStateOf(100) }
     var inputModeBulk by remember { mutableStateOf(true) } // true = bulk lines, false = single input
     var bulkInputText by remember { mutableStateOf("") }
@@ -70,7 +75,7 @@ fun CardsTab(viewModel: MainViewModel) {
 
     // Categories filter for inventory view
     var selectedViewCategory by remember { mutableStateOf(100) }
-    val cardFormatMode by viewModel.cardFormatMode.collectAsState() // "user_pass" or "user_only"
+    val cardFormatMode by smsViewModel.cardFormatMode.collectAsState() // "user_pass" or "user_only"
 
     // Active cards filtering (category, unused)
     val filteredCards = remember(allCards, selectedViewCategory) {
@@ -136,7 +141,7 @@ fun CardsTab(viewModel: MainViewModel) {
                 ) {
                     Switch(
                         checked = isAutoSendSmsEnabled,
-                        onCheckedChange = { viewModel.toggleAutoSendSms(it) },
+                        onCheckedChange = { smsViewModel.toggleAutoSendSms(it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = if (isDark) DeepBlack else Color.White,
                             checkedTrackColor = BrandPrimaryRed,
@@ -453,7 +458,7 @@ fun CardsTab(viewModel: MainViewModel) {
                                         feedbackMsg = "الرجاء كتابة كروت لحفظها أولاً!"
                                         return@Button
                                     }
-                                    viewModel.addCards(selectedCategoryForAdding, bulkInputText.trim()) { count ->
+                                    inventoryViewModel.addCardsBulk(selectedCategoryForAdding, bulkInputText.trim()) { count ->
                                         feedbackSuccess = count > 0
                                         feedbackMsg = "تم حفظ $count كارت بنجاح في فئة $selectedCategoryForAdding ر.ي!"
                                         bulkInputText = ""
@@ -489,7 +494,7 @@ fun CardsTab(viewModel: MainViewModel) {
                                         )
                                     }
 
-                                    viewModel.addSingleCard(selectedCategoryForAdding, card) { success ->
+                                    inventoryViewModel.addSingleCard(card) { success ->
                                         feedbackSuccess = success
                                         feedbackMsg = if (success) "تم إضافة الكارت الفردي بنجاح!" else "حدث خطأ أثناء حفظ الكارت."
                                         singleCodeText = ""
@@ -1140,8 +1145,8 @@ fun CardsTab(viewModel: MainViewModel) {
                     Button(
                         onClick = {
                             // Copy, Mark as used, Insert Manual Transaction
-                            viewModel.markCardAsUsed(card.id)
-                            viewModel.insertManualTransaction("عميل مباشر", card.category, cardDisplayDetails, "بيع يدوي نسخ ومشاركة")
+                            inventoryViewModel.markCardAsUsed(card.id)
+                            salesViewModel.addManualTransaction("عميل مباشر", card.category, cardDisplayDetails, "بيع يدوي نسخ ومشاركة")
                             
                             val shareMessage = "كود كرت الشحن فئة ${card.category} ر.ي هو:\n$cardDisplayDetails"
                             com.example.utils.SmsSender.launchWalletApp(context, selectedShareWallet, shareMessage)
@@ -1164,8 +1169,8 @@ fun CardsTab(viewModel: MainViewModel) {
                             clipboard.setPrimaryClip(clip)
 
                             // Mark as used automatically in Room Database
-                            viewModel.markCardAsUsed(card.id)
-                            viewModel.insertManualTransaction("عميل مباشر", card.category, cardDisplayDetails, "بيع يدوي نسخ")
+                            inventoryViewModel.markCardAsUsed(card.id)
+                            salesViewModel.addManualTransaction("عميل مباشر", card.category, cardDisplayDetails, "بيع يدوي نسخ")
 
                             Toast.makeText(context, "تم نسخ الكرت وتسجيله كمباع بنجاح! 💸", Toast.LENGTH_SHORT).show()
                             
@@ -1299,7 +1304,7 @@ fun CardsTab(viewModel: MainViewModel) {
                     // Delete Confirm Button
                     Button(
                         onClick = {
-                            viewModel.deleteCard(cardToDelete!!.id)
+                            inventoryViewModel.deleteCard(cardToDelete!!.id)
                             Toast.makeText(context, "تم حذف الكارت بنجاح 🗑️", Toast.LENGTH_SHORT).show()
                             showDeleteBottomSheet = false
                             cardToDelete = null

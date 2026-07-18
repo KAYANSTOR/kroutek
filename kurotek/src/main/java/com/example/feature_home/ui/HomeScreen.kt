@@ -44,27 +44,31 @@ import java.nio.charset.StandardCharsets
 // TAB 1: الرئيسية (Home Tab)
 // ==========================================
 @Composable
-fun HomeTab(
-    viewModel: MainViewModel,
+fun HomeScreen(
+    authViewModel: com.example.ui.AuthViewModel,
+    inventoryViewModel: com.example.ui.InventoryViewModel,
+    salesViewModel: com.example.ui.SalesViewModel,
+    mainViewModel: com.example.ui.MainViewModel,
+    distributorViewModel: com.example.ui.DistributorViewModel,
     onNavigateToSubScreen: (String) -> Unit,
     onNavigateToTab: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    val isActivated by viewModel.isActivated.collectAsState()
-    val isTrialActive by viewModel.isTrialActive.collectAsState()
-    val networkName by viewModel.networkName.collectAsState()
-    val totalUnusedCount by viewModel.totalUnusedCount.collectAsState()
-    val isDark by viewModel.isDarkTheme.collectAsState()
+    val isActivated by authViewModel.isActivated.collectAsState()
+    val isTrialActive by authViewModel.isTrialActive.collectAsState()
+    val networkName by authViewModel.networkName.collectAsState()
+    val totalUnusedCount by inventoryViewModel.totalUnusedCount.collectAsState()
+    val isDark by mainViewModel.isDarkTheme.collectAsState()
     
     // Unused counts per category
-    val count100 by viewModel.count100.collectAsState()
-    val count200 by viewModel.count200.collectAsState()
-    val count250 by viewModel.count250.collectAsState()
-    val count300 by viewModel.count300.collectAsState()
-    val count500 by viewModel.count500.collectAsState()
+    val count100 by inventoryViewModel.getCountForCategory(100).collectAsState(initial = 0)
+    val count200 by inventoryViewModel.getCountForCategory(200).collectAsState(initial = 0)
+    val count250 by inventoryViewModel.getCountForCategory(250).collectAsState(initial = 0)
+    val count300 by inventoryViewModel.getCountForCategory(300).collectAsState(initial = 0)
+    val count500 by inventoryViewModel.getCountForCategory(500).collectAsState(initial = 0)
     
-    val allTransactions by viewModel.allTransactions.collectAsState()
-    val allDeposits by viewModel.allDeposits.collectAsState()
+    val allTransactions by salesViewModel.transactions.collectAsState()
+    val allDeposits by salesViewModel.deposits.collectAsState()
     val todayDateStr = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     
     // Filter transactions to just show today's movements
@@ -235,7 +239,7 @@ fun HomeTab(
                                 textAlign = TextAlign.Right
                             )
                             Spacer(modifier = Modifier.height(2.dp))
-                            val remainingDays = viewModel.getRemainingTrialDays()
+                            val remainingDays = authViewModel.getRemainingTrialDays()
                             Text(
                                 text = "متبقي لديك $remainingDays أيام لتجربة التطبيق مجاناً. اضغط هنا للتواصل مع المطور لشراء السيريال والتنشيط الدائم.",
                                 color = TextSecondary,
@@ -399,7 +403,7 @@ fun HomeTab(
                             .weight(1f)
                             .height(90.dp)
                             .clickable { 
-                                viewModel.setDistributorModeActive(true)
+                                distributorViewModel.setDistributorModeActive(true)
                                 Toast.makeText(context, "تم التبديل إلى وضع الموزع 🔄", Toast.LENGTH_SHORT).show()
                             }
                     ) {
@@ -423,7 +427,7 @@ fun HomeTab(
                             .weight(1f)
                             .height(90.dp)
                             .clickable {
-                                viewModel.setDistributorModeActive(true)
+                                distributorViewModel.setDistributorModeActive(true)
                             }
                     ) {
                         Column(
@@ -515,7 +519,7 @@ fun HomeTab(
                             .weight(1f)
                             .height(90.dp)
                             .clickable {
-                                viewModel.setDistributorModeActive(true)
+                                distributorViewModel.setDistributorModeActive(true)
                             }
                     ) {
                         Column(

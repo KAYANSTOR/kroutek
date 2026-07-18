@@ -1,4 +1,4 @@
-﻿package com.example.feature_settings.ui
+package com.example.feature_settings.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -45,23 +45,25 @@ import java.nio.charset.StandardCharsets
 // ==========================================
 @Composable
 fun SettingsTab(
-    viewModel: MainViewModel,
+    mainViewModel: MainViewModel,
+    authViewModel: com.example.ui.AuthViewModel,
+    settingsViewModel: com.example.ui.SettingsViewModel,
+    distributorViewModel: com.example.ui.DistributorViewModel,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
-    val isAutoSendSmsEnabled by viewModel.isAutoSendSmsEnabled.collectAsState()
-    val isNotificationClickComposeEnabled by viewModel.isNotificationClickComposeEnabled.collectAsState()
-    val generalSmsTemplate by viewModel.generalSmsTemplate.collectAsState()
-    val networkName by viewModel.networkName.collectAsState()
-    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
-    val allMappings by viewModel.allMappings.collectAsState()
+    val isAutoSendSmsEnabled by settingsViewModel.isAutoSendSmsEnabled.collectAsState()
+    val isNotificationClickComposeEnabled by settingsViewModel.isNotificationClickComposeEnabled.collectAsState()
+    val generalSmsTemplate by settingsViewModel.generalSmsTemplate.collectAsState()
+    val networkName by settingsViewModel.networkName.collectAsState()
+    val isDarkTheme by mainViewModel.isDarkTheme.collectAsState()
 
-    val isJeebEnabled by viewModel.isJeebEnabled.collectAsState()
-    val isJawaliEnabled by viewModel.isJawaliEnabled.collectAsState()
-    val isKuraimiEnabled by viewModel.isKuraimiEnabled.collectAsState()
-    val isHasebEnabled by viewModel.isHasebEnabled.collectAsState()
-    val isOneCashEnabled by viewModel.isOneCashEnabled.collectAsState()
-    val isMFloosEnabled by viewModel.isMFloosEnabled.collectAsState()
+    val isJeebEnabled by settingsViewModel.isJeebEnabled.collectAsState()
+    val isJawaliEnabled by settingsViewModel.isJawaliEnabled.collectAsState()
+    val isKuraimiEnabled by settingsViewModel.isKuraimiEnabled.collectAsState()
+    val isHasebEnabled by settingsViewModel.isHasebEnabled.collectAsState()
+    val isOneCashEnabled by settingsViewModel.isOneCashEnabled.collectAsState()
+    val isMFloosEnabled by settingsViewModel.isMFloosEnabled.collectAsState()
 
     // Configuration Inputs
     var editNetworkNameText by remember { mutableStateOf(networkName) }
@@ -107,7 +109,7 @@ fun SettingsTab(
                     ) {
                         Switch(
                             checked = isAutoSendSmsEnabled,
-                            onCheckedChange = { viewModel.toggleAutoSendSms(it) },
+                            onCheckedChange = { settingsViewModel.toggleAutoSendSms(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = if (isDarkTheme) DeepBlack else Color.White,
                                 checkedTrackColor = if (isDarkTheme) GlowPurplePink else Color(0xFF7B1FA2)
@@ -129,7 +131,7 @@ fun SettingsTab(
                     ) {
                         Switch(
                             checked = isNotificationClickComposeEnabled,
-                            onCheckedChange = { viewModel.toggleNotificationClickCompose(it) },
+                            onCheckedChange = { settingsViewModel.toggleNotificationClickCompose(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = if (isDarkTheme) DeepBlack else Color.White,
                                 checkedTrackColor = if (isDarkTheme) GlowPurplePink else Color(0xFF7B1FA2)
@@ -154,12 +156,12 @@ fun SettingsTab(
 
                     // Switches for each individual wallet
                     val walletList = listOf(
-                        Triple("تفعيل استقبال دفعات (محفظة كاش)", isJeebEnabled) { v: Boolean -> viewModel.toggleJeeb(v) },
-                        Triple("تفعيل استقبال دفعات (جوالي)", isJawaliEnabled) { v: Boolean -> viewModel.toggleJawali(v) },
-                        Triple("تفعيل استقبال دفعات (كريمي)", isKuraimiEnabled) { v: Boolean -> viewModel.toggleKuraimi(v) },
-                        Triple("تفعيل استقبال دفعات (حاسب)", isHasebEnabled) { v: Boolean -> viewModel.toggleHaseb(v) },
-                        Triple("تفعيل استقبال دفعات (ون كاش)", isOneCashEnabled) { v: Boolean -> viewModel.toggleOneCash(v) },
-                        Triple("تفعيل استقبال دفعات (ام فلوس)", isMFloosEnabled) { v: Boolean -> viewModel.toggleMFloos(v) }
+                        Triple("تفعيل استقبال دفعات (محفظة كاش)", isJeebEnabled) { v: Boolean -> settingsViewModel.toggleJeeb(v) },
+                        Triple("تفعيل استقبال دفعات (جوالي)", isJawaliEnabled) { v: Boolean -> settingsViewModel.toggleJawali(v) },
+                        Triple("تفعيل استقبال دفعات (كريمي)", isKuraimiEnabled) { v: Boolean -> settingsViewModel.toggleKuraimi(v) },
+                        Triple("تفعيل استقبال دفعات (حاسب)", isHasebEnabled) { v: Boolean -> settingsViewModel.toggleHaseb(v) },
+                        Triple("تفعيل استقبال دفعات (ون كاش)", isOneCashEnabled) { v: Boolean -> settingsViewModel.toggleOneCash(v) },
+                        Triple("تفعيل استقبال دفعات (ام فلوس)", isMFloosEnabled) { v: Boolean -> settingsViewModel.toggleMFloos(v) }
                     )
 
                     walletList.forEach { (label, isEnabled, onToggle) ->
@@ -268,13 +270,13 @@ fun SettingsTab(
                     Button(
                         onClick = {
                             if (editNetworkNameText.trim().isNotEmpty()) {
-                                viewModel.updateNetworkName(editNetworkNameText.trim())
+                                settingsViewModel.updateNetworkName(editNetworkNameText.trim())
                             }
                             if (editSmsTemplateText.trim().isNotEmpty()) {
-                                viewModel.updateGeneralSmsTemplate(editSmsTemplateText.trim())
+                                settingsViewModel.updateGeneralSmsTemplate(editSmsTemplateText.trim())
                             }
                             if (editNewSerialText.trim().isNotEmpty()) {
-                                viewModel.setAppPasswordDirectly(editNewSerialText.trim())
+                                authViewModel.setAppPasswordDirectly(editNewSerialText.trim())
                                 editNewSerialText = ""
                             }
                             feedbackSuccess = true
@@ -320,7 +322,7 @@ fun SettingsTab(
                 ) {
                     Switch(
                         checked = isDarkTheme,
-                        onCheckedChange = { viewModel.setDarkTheme(it) },
+                        onCheckedChange = { mainViewModel.setDarkTheme(it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = if (isDarkTheme) DeepBlack else Color.White,
                             checkedTrackColor = if (isDarkTheme) GlowPurplePink else Color(0xFF7B1FA2)

@@ -69,6 +69,11 @@ class SmsReceiver : BroadcastReceiver() {
         }
 
         if (parsed != null) {
+            val allowedAmounts = listOf(100, 200, 300, 500, 1000, 3000)
+            if (parsed.amount !in allowedAmounts) {
+                Log.d("SmsReceiver", "Amount ${parsed.amount} is not in the allowed list (100, 200, 300, 500, 1000, 3000). SMS ignored.")
+                return
+            }
             sendCard(context, repository, parsed.amount, parsed.phone, parsed.walletType, parsed.isAccountCode)
         }
     }

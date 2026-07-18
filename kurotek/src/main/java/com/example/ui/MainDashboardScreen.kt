@@ -5,7 +5,7 @@ import com.example.feature_customers.ui.SpecialCustomersTab
 import com.example.feature_settings.ui.SettingsTab
 import com.example.feature_reports.ui.ReportsTab
 import com.example.feature_cards.ui.CardsTab
-import com.example.feature_home.ui.HomeTab
+import com.example.feature_home.ui.HomeScreen
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
@@ -57,19 +57,28 @@ import com.example.utils.DocumentExporter
 
 @Composable
 fun MainDashboardScreen(
-    viewModel: MainViewModel,
+    mainViewModel: MainViewModel,
+    authViewModel: com.example.ui.AuthViewModel,
+    settingsViewModel: com.example.ui.SettingsViewModel,
+    distributorViewModel: com.example.ui.DistributorViewModel,
+    dashboardViewModel: com.example.ui.DashboardViewModel,
+    inventoryViewModel: com.example.ui.InventoryViewModel,
+    salesViewModel: com.example.ui.SalesViewModel,
+    reportsViewModel: com.example.ui.ReportsViewModel,
+    walletViewModel: com.example.ui.WalletViewModel,
+    mikrotikViewModel: com.example.ui.MikrotikViewModel,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(0) }
-    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
-    val networkName by viewModel.networkName.collectAsState()
-    val allPendingApprovals by viewModel.allPendingApprovals.collectAsState()
+    val isDarkTheme by mainViewModel.isDarkTheme.collectAsState()
+    val networkName by settingsViewModel.networkName.collectAsState()
+    val allPendingApprovals by dashboardViewModel.pendingApprovals.collectAsState()
 
     var activeEventNotification by remember { mutableStateOf<com.example.utils.NotificationBus.NewCardExtractedEvent?>(null) }
     var isCenterMenuOpen by remember { mutableStateOf(false) }
     var currentSubScreen by remember { mutableStateOf<String?>(null) } // "mikrotik", null
-    val isDistributorModeActive by viewModel.isDistributorModeActive.collectAsState()
+    val isDistributorModeActive by distributorViewModel.isDistributorModeActive.collectAsState()
     var distributorInitialTab by remember { mutableStateOf(0) }
     var showExitConfirmDialog by remember { mutableStateOf(false) }
 
@@ -154,7 +163,7 @@ fun MainDashboardScreen(
             )
         } else if (currentSubScreen == "mikrotik") {
             MikrotikGeneratorScreen(
-                viewModel = viewModel,
+                viewModel = mikrotikViewModel,
                 onBack = { currentSubScreen = null }
             )
         } else {
@@ -298,28 +307,55 @@ fun MainDashboardScreen(
             ) {
                 if (isDistributorModeActive) {
                     DistributorSystemScreen(
-                        viewModel = viewModel,
-                        selectedTab = selectedTab
+                        viewModel = distributorViewModel,
+                        initialTab = selectedTab,
+                        onBack = { distributorViewModel.setDistributorModeActive(false) }
                     )
                 } else {
                     when (selectedTab) {
-                        0 -> HomeTab(
-                            viewModel = viewModel,
+                        0 -> HomeScreen(
+                            authViewModel = authViewModel,
+                            inventoryViewModel = inventoryViewModel,
+                            salesViewModel = salesViewModel,
+                            mainViewModel = mainViewModel,
+                            distributorViewModel = distributorViewModel,
                             onNavigateToSubScreen = { screen ->
                                 if (screen.startsWith("distributor")) {
-                                    // Should not happen anymore, but handled
-                                    viewModel.setDistributorModeActive(true)
+                                    distributorViewModel.setDistributorModeActive(true)
                                 } else {
                                     currentSubScreen = screen
                                 }
                             },
                             onNavigateToTab = { selectedTab = it }
                         )
-                        1 -> CardsTab(viewModel = viewModel)
-                        2 -> PendingApprovalsTab(viewModel = viewModel)
-                        3 -> SpecialCustomersTab(viewModel = viewModel)
-                        4 -> ReportsTab(viewModel = viewModel)
-                        5 -> SettingsTab(viewModel = viewModel, onLogout = onLogout)
+                        1 -> CardsTab(
+                            inventoryViewModel = inventoryViewModel,
+                            salesViewModel = salesViewModel,
+                            smsViewModel = settingsViewModel,
+                            mainViewModel = mainViewModel
+                        )
+                        2 -> PendingApprovalsTab(
+                            dashboardViewModel = dashboardViewModel,
+                            reportsViewModel = reportsViewModel,
+                            mainViewModel = mainViewModel
+                        )
+                        3 -> SpecialCustomersTab(
+                            reportsViewModel = reportsViewModel,
+                            salesViewModel = salesViewModel,
+                            mainViewModel = mainViewModel
+                        )
+                        4 -> ReportsTab(
+                            salesViewModel = salesViewModel,
+                            dashboardViewModel = dashboardViewModel,
+                            mainViewModel = mainViewModel
+                        )
+                        5 -> SettingsTab(
+                            mainViewModel = mainViewModel,
+                            authViewModel = authViewModel,
+                            settingsViewModel = settingsViewModel,
+                            distributorViewModel = distributorViewModel,
+                            onLogout = onLogout
+                        )
                     }
                 }
             }
@@ -405,7 +441,7 @@ fun MainDashboardScreen(
                                         .height(100.dp)
                                         .clickable {
                                             isCenterMenuOpen = false
-                                            viewModel.setDistributorModeActive(false)
+                                            distributorViewModel.setDistributorModeActive(false)
                                             Toast.makeText(context, "تم التبديل إلى نظام المحافظ و الـ SMS 🔄", Toast.LENGTH_SHORT).show()
                                         }
                                 ) {
@@ -435,7 +471,7 @@ fun MainDashboardScreen(
                                         .height(100.dp)
                                         .clickable {
                                             isCenterMenuOpen = false
-                                            viewModel.clearAllDistributorData()
+                                            distributorViewModel.clearAllDistributorData()
                                             Toast.makeText(context, "🗑️ تم تصفية البيانات بنجاح!", Toast.LENGTH_SHORT).show()
                                         }
                                 ) {

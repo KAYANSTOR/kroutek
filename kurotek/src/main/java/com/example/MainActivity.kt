@@ -55,16 +55,51 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 val context = LocalContext.current
-                val repository = remember { CardRepository(context) }
-                val factory = remember { MainViewModelFactory(repository) }
-                val viewModel: MainViewModel = viewModel(factory = factory)
+                val coreContainer = remember { com.example.core.CoreContainer.getInstance(context) }
+                
+                // Old ViewModels (being phased out or refactored)
+                val factory = remember { MainViewModelFactory(coreContainer.cardRepository) }
+                val mainViewModel: MainViewModel = viewModel(factory = factory)
 
-                val isDarkTheme by viewModel.isDarkTheme.collectAsState()
+                val authFactory = remember { AuthViewModelFactory(coreContainer) }
+                val authViewModel: com.example.ui.AuthViewModel = viewModel(factory = authFactory)
+
+                val smsFactory = remember { SmsViewModelFactory(coreContainer) }
+                // SmsViewModel is kept for background SMS processing service only
+                @Suppress("UNUSED_VARIABLE")
+                val smsViewModel: com.example.ui.SmsViewModel = viewModel(factory = smsFactory)
+
+                val settingsFactory = remember { SettingsViewModelFactory(coreContainer.cardRepository, coreContainer) }
+                val settingsViewModel: com.example.ui.SettingsViewModel = viewModel(factory = settingsFactory)
+
+                val distFactory = remember { DistributorViewModelFactory(coreContainer) }
+                val distributorViewModel: com.example.ui.DistributorViewModel = viewModel(factory = distFactory)
+
+                // New Clean Architecture ViewModels
+                val dashboardFactory = remember { DashboardViewModelFactory(coreContainer) }
+                val dashboardViewModel: com.example.ui.DashboardViewModel = viewModel(factory = dashboardFactory)
+
+                val inventoryFactory = remember { InventoryViewModelFactory(coreContainer) }
+                val inventoryViewModel: com.example.ui.InventoryViewModel = viewModel(factory = inventoryFactory)
+
+                val salesFactory = remember { SalesViewModelFactory(coreContainer) }
+                val salesViewModel: com.example.ui.SalesViewModel = viewModel(factory = salesFactory)
+
+                val reportsFactory = remember { ReportsViewModelFactory(coreContainer) }
+                val reportsViewModel: com.example.ui.ReportsViewModel = viewModel(factory = reportsFactory)
+
+                val walletFactory = remember { WalletViewModelFactory(coreContainer) }
+                val walletViewModel: com.example.ui.WalletViewModel = viewModel(factory = walletFactory)
+
+                val mikrotikFactory = remember { MikrotikViewModelFactory(coreContainer) }
+                val mikrotikViewModel: com.example.ui.MikrotikViewModel = viewModel(factory = mikrotikFactory)
+
+                val isDarkTheme by mainViewModel.isDarkTheme.collectAsState()
                 LaunchedEffect(isDarkTheme) {
                     com.example.ui.theme.isDarkThemeState.value = isDarkTheme
                 }
 
-                val isActivated by viewModel.isActivated.collectAsState()
+                val isActivated by authViewModel.isActivated.collectAsState()
                 var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) }
 
                 // 🔥 Firebase: تسجيل الجهاز وفحص Kill Switch
@@ -136,7 +171,9 @@ class MainActivity : ComponentActivity() {
                         when (currentScreen) {
                             AppScreen.LOGIN -> {
                                 LoginScreen(
-                                    viewModel = viewModel,
+                                    authViewModel = authViewModel,
+                                    mainViewModel = mainViewModel,
+                                    smsViewModel = settingsViewModel,
                                     onLoginSuccess = { currentScreen = AppScreen.MAIN }
                                 )
                             }
@@ -145,9 +182,18 @@ class MainActivity : ComponentActivity() {
                                     SyncService.startService(context)
                                 }
                                 MainDashboardScreen(
-                                    viewModel = viewModel,
+                                    mainViewModel = mainViewModel,
+                                    authViewModel = authViewModel,
+                                    smsViewModel = settingsViewModel,
+                                    distributorViewModel = distributorViewModel,
+                                    dashboardViewModel = dashboardViewModel,
+                                    inventoryViewModel = inventoryViewModel,
+                                    salesViewModel = salesViewModel,
+                                    reportsViewModel = reportsViewModel,
+                                    walletViewModel = walletViewModel,
+                                    mikrotikViewModel = mikrotikViewModel,
                                     onLogout = {
-                                        viewModel.setActivated(false)
+                                        authViewModel.setActivated(false)
                                         SyncService.stopService(context)
                                         currentScreen = AppScreen.LOGIN
                                     }
@@ -156,9 +202,18 @@ class MainActivity : ComponentActivity() {
                             else -> {
                                 // Fallback
                                 MainDashboardScreen(
-                                    viewModel = viewModel,
+                                    mainViewModel = mainViewModel,
+                                    authViewModel = authViewModel,
+                                    smsViewModel = settingsViewModel,
+                                    distributorViewModel = distributorViewModel,
+                                    dashboardViewModel = dashboardViewModel,
+                                    inventoryViewModel = inventoryViewModel,
+                                    salesViewModel = salesViewModel,
+                                    reportsViewModel = reportsViewModel,
+                                    walletViewModel = walletViewModel,
+                                    mikrotikViewModel = mikrotikViewModel,
                                     onLogout = {
-                                        viewModel.setActivated(false)
+                                        authViewModel.setActivated(false)
                                         currentScreen = AppScreen.LOGIN
                                     }
                                 )
