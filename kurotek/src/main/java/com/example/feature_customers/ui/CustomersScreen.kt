@@ -356,7 +356,7 @@ fun SpecialCustomersTab(viewModel: MainViewModel) {
                                 val badgeBgColor = when (mapping.walletType) {
                                     "جيب" -> Color(0xFF1565C0).copy(alpha = 0.15f)
                                     "جوالي" -> Color(0xFF2E7D32).copy(alpha = 0.15f)
-                                    "كريمي" -> Color(0xFFC62828).copy(alpha = 0.15f)
+                                    "كريمي" -> BrandPrimaryDark.copy(alpha = 0.15f)
                                     "حاسب" -> Color(0xFFEF6C00).copy(alpha = 0.15f)
                                     "ون كاش" -> Color(0xFF880E4F).copy(alpha = 0.15f)
                                     else -> Color(0xFF4527A0).copy(alpha = 0.15f)
