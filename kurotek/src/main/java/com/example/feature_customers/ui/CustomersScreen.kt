@@ -1,4 +1,4 @@
-﻿package com.example.feature_customers.ui
+package com.example.feature_customers.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -42,11 +42,15 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SpecialCustomersTab(viewModel: MainViewModel) {
+fun SpecialCustomersTab(
+    reportsViewModel: com.example.ui.ReportsViewModel,
+    salesViewModel: com.example.ui.SalesViewModel,
+    mainViewModel: com.example.ui.MainViewModel
+) {
     val context = LocalContext.current
-    val allMappings by viewModel.allMappings.collectAsState()
-    val allTransactions by viewModel.allTransactions.collectAsState()
-    val isDark by viewModel.isDarkTheme.collectAsState()
+    val allMappings by reportsViewModel.mappings.collectAsState()
+    val allTransactions by salesViewModel.transactions.collectAsState()
+    val isDark by mainViewModel.isDarkTheme.collectAsState()
 
     var customerName by remember { mutableStateOf("") }
     var customerUniqueId by remember { mutableStateOf("") }
@@ -226,10 +230,10 @@ fun SpecialCustomersTab(viewModel: MainViewModel) {
                                 Toast.makeText(context, "الرجاء تعبئة كافة بيانات العميل المطلوب أولاً!", Toast.LENGTH_SHORT).show()
                                 return@Button
                             }
-                            viewModel.insertMapping(
-                                customerUniqueId = customerUniqueId.trim(),
-                                basicPhone = basicPhone.trim(),
-                                customerName = customerName.trim(),
+                            reportsViewModel.addMapping(
+                                uniqueId = customerUniqueId.trim(),
+                                phone = basicPhone.trim(),
+                                name = customerName.trim(),
                                 walletType = walletType
                             )
                             customerName = ""
@@ -334,7 +338,7 @@ fun SpecialCustomersTab(viewModel: MainViewModel) {
                     ) {
                         // Delete Button (Outlined)
                         IconButton(
-                            onClick = { viewModel.deleteMapping(mapping.id) }
+                            onClick = { reportsViewModel.deleteMapping(mapping.id) }
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,

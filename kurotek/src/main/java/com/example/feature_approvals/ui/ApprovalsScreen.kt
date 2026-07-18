@@ -1,4 +1,4 @@
-﻿package com.example.feature_approvals.ui
+package com.example.feature_approvals.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -40,14 +40,19 @@ import android.net.Uri
 import android.util.Log
 import java.io.File
 import java.nio.charset.StandardCharsets
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.ui.MainViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PendingApprovalsTab(viewModel: MainViewModel) {
+fun PendingApprovalsTab(
+    dashboardViewModel: com.example.ui.DashboardViewModel,
+    reportsViewModel: com.example.ui.ReportsViewModel,
+    mainViewModel: com.example.ui.MainViewModel
+) {
     val context = LocalContext.current
-    val allPendingApprovals by viewModel.allPendingApprovals.collectAsState()
-    val isDark by viewModel.isDarkTheme.collectAsState()
+    val allPendingApprovals by dashboardViewModel.pendingApprovals.collectAsState()
+    val isDark by mainViewModel.isDarkTheme.collectAsState()
 
     var showLinkDialog by remember { mutableStateOf(false) }
     var pendingToLink by remember { mutableStateOf<com.example.models.PendingApproval?>(null) }
@@ -273,7 +278,7 @@ fun PendingApprovalsTab(viewModel: MainViewModel) {
                             // Reject Button (Red outline)
                             OutlinedButton(
                                 onClick = {
-                                    viewModel.rejectPendingApproval(pending.id)
+                                    dashboardViewModel.rejectPending(pending.id)
                                     Toast.makeText(context, "تم رفض المعاملة اليدوية وإلغاؤها", Toast.LENGTH_SHORT).show()
                                 },
                                 border = BorderStroke(1.dp, StatusRed),
@@ -287,16 +292,11 @@ fun PendingApprovalsTab(viewModel: MainViewModel) {
                             // Approve Button (Emerald Green style)
                             Button(
                                 onClick = {
-                                    viewModel.approvePendingApproval(pending.id) { success, isSent, replyMsg, phone ->
+                                    dashboardViewModel.approvePending(pending.id) { success, message ->
                                         if (success) {
-                                            if (isSent) {
-                                                Toast.makeText(context, "تمت الموافقة وإرسال كود الشحن بنجاح! ✔", Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                Toast.makeText(context, "تمت الموافقة وتخصيص الكرت بنجاح ⚠️ ولكن فشل الإرسال التلقائي كرسالة. جاري المشاركة اليدوية والمتابعة...", Toast.LENGTH_LONG).show()
-                                                com.example.utils.SmsSender.launchWalletApp(context, pending.walletType, replyMsg)
-                                            }
+                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                         } else {
-                                            Toast.makeText(context, "حدث خطأ أو نفذت كروت المخزون!", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                                         }
                                     }
                                 },
@@ -386,14 +386,14 @@ fun PendingApprovalsTab(viewModel: MainViewModel) {
                         val cleanedPhone = enteredPhoneNumber.trim()
                         if (cleanedPhone.isNotEmpty()) {
                             // 1. Create mapping in the database
-                            viewModel.insertMapping(
-                                customerUniqueId = pending.phone.trim(),
-                                basicPhone = cleanedPhone,
-                                customerName = pending.phone.trim(),
+                            reportsViewModel.addMapping(
+                                uniqueId = pending.phone.trim(),
+                                phone = cleanedPhone,
+                                name = pending.phone.trim(),
                                 walletType = pending.walletType
                             )
                             // 2. Update the pending approval phone number itself in DB
-                            viewModel.updatePendingApprovalPhone(pending.id, cleanedPhone)
+                            dashboardViewModel.updatePendingApprovalPhone(pending.id, cleanedPhone)
                             
                             Toast.makeText(context, "تم ربط الرقم وحفظ الارتباط بنجاح! 📱", Toast.LENGTH_SHORT).show()
                             showLinkDialog = false

@@ -46,9 +46,9 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DistributorSystemScreen(
-    viewModel: MainViewModel,
+    viewModel: com.example.ui.DistributorViewModel,
     initialTab: Int = 0,
-    onBack: () -> Unit
+    onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val customers by viewModel.distributorCustomers.collectAsState()

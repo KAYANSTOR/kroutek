@@ -41,12 +41,14 @@ import com.example.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    viewModel: MainViewModel,
+    authViewModel: AuthViewModel,
+    mainViewModel: MainViewModel,
+    smsViewModel: SettingsViewModel,
     onLoginSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val isDark by viewModel.isDarkTheme.collectAsState()
-    val savedNetworkName by viewModel.networkName.collectAsState()
+    val isDark by mainViewModel.isDarkTheme.collectAsState()
+    val savedNetworkName by smsViewModel.networkName.collectAsState()
     var networkNameInput by remember(savedNetworkName) { mutableStateOf(savedNetworkName) }
     var serialInput by remember { mutableStateOf("") }
     var serialVisible by remember { mutableStateOf(false) }
@@ -68,8 +70,8 @@ fun LoginScreen(
             errorMessage = "⚠️ يرجى إدخال اسم شبكتك الخاصة أولاً!"
         } else {
             errorMessage = ""
-            viewModel.updateNetworkName(trimmedNetwork)
-            viewModel.setInitialLoginDone(true)
+            smsViewModel.updateNetworkName(trimmedNetwork)
+            authViewModel.setInitialLoginDone(true)
             keyboardController?.hide()
             Toast.makeText(context, "⚡ تم حفظ اسم الشبكة والدخول للنظام بنجاح!", Toast.LENGTH_SHORT).show()
             onLoginSuccess()
@@ -89,10 +91,10 @@ fun LoginScreen(
                 isVerifying = false
                 if (success) {
                     errorMessage = ""
-                    viewModel.updateNetworkName(networkNameInput.trim().ifEmpty { "شبكة الدحشة" })
-                    viewModel.setActivated(true, trimmedInput)
-                    viewModel.setInitialLoginDone(true)
-                    viewModel.verifyPassword("PY_7MD") // Automatic login session success trigger
+                    smsViewModel.updateNetworkName(networkNameInput.trim().ifEmpty { "شبكة الدحشة" })
+                    authViewModel.setActivated(true, trimmedInput)
+                    authViewModel.setInitialLoginDone(true)
+                    authViewModel.verifyPassword("PY_7MD") // Automatic login session success trigger
                     keyboardController?.hide()
                     Toast.makeText(context, "🔑 تم تفعيل وترخيص التطبيق بنجاح!", Toast.LENGTH_LONG).show()
                     onLoginSuccess()

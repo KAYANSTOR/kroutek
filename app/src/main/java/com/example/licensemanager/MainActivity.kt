@@ -398,6 +398,92 @@ class LicenseManagerViewModel(context: Context) : ViewModel() {
             }
         }
     }
+
+    // =========================================================================
+    // FIREBASE DEVICES MANAGEMENT
+    // =========================================================================
+
+    data class FirebaseDevice(
+        val deviceId: String = "",
+        val deviceName: String = "",
+        val androidVersion: String = "",
+        val appVersion: String = "",
+        val installDate: Long = 0L,
+        val lastSeen: Long = 0L,
+        val status: String = "trial",
+        val isBlocked: Boolean = false
+    )
+
+    private val _firebaseDevices = MutableStateFlow<List<FirebaseDevice>>(emptyList())
+    val firebaseDevices: StateFlow<List<FirebaseDevice>> = _firebaseDevices.asStateFlow()
+
+    private val _isLoadingDevices = MutableStateFlow(false)
+    val isLoadingDevices: StateFlow<Boolean> = _isLoadingDevices.asStateFlow()
+
+    fun loadFirebaseDevices() {
+        _isLoadingDevices.value = true
+        try {
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance()
+            db.getReference("kurotek_devices")
+                .addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+                    override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+                        val devices = mutableListOf<FirebaseDevice>()
+                        snapshot.children.forEach { child ->
+                            val device = FirebaseDevice(
+                                deviceId = child.child("deviceId").getValue(String::class.java) ?: "",
+                                deviceName = child.child("deviceName").getValue(String::class.java) ?: "غير معروف",
+                                androidVersion = child.child("androidVersion").getValue(String::class.java) ?: "",
+                                appVersion = child.child("appVersion").getValue(String::class.java) ?: "",
+                                installDate = child.child("installDate").getValue(Long::class.java) ?: 0L,
+                                lastSeen = child.child("lastSeen").getValue(Long::class.java) ?: 0L,
+                                status = child.child("status").getValue(String::class.java) ?: "trial",
+                                isBlocked = child.child("isBlocked").getValue(Boolean::class.java) ?: false
+                            )
+                            if (device.deviceId.isNotEmpty()) devices.add(device)
+                        }
+                        _firebaseDevices.value = devices.sortedByDescending { it.installDate }
+                        _isLoadingDevices.value = false
+                    }
+                    override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+                        _isLoadingDevices.value = false
+                        _errorMessage.value = "خطأ Firebase: ${error.message}"
+                    }
+                })
+        } catch (e: Exception) {
+            _isLoadingDevices.value = false
+            _errorMessage.value = "Firebase غير مهيأ بعد. أضف google-services.json"
+        }
+    }
+
+    fun blockFirebaseDevice(deviceId: String, onDone: (Boolean) -> Unit) {
+        try {
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance()
+            db.getReference("kurotek_devices").child(deviceId)
+                .updateChildren(mapOf("isBlocked" to true, "status" to "blocked"))
+                .addOnSuccessListener { onDone(true) }
+                .addOnFailureListener { onDone(false) }
+        } catch (e: Exception) { onDone(false) }
+    }
+
+    fun unblockFirebaseDevice(deviceId: String, onDone: (Boolean) -> Unit) {
+        try {
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance()
+            db.getReference("kurotek_devices").child(deviceId)
+                .updateChildren(mapOf("isBlocked" to false, "status" to "active"))
+                .addOnSuccessListener { onDone(true) }
+                .addOnFailureListener { onDone(false) }
+        } catch (e: Exception) { onDone(false) }
+    }
+
+    fun deleteFirebaseDevice(deviceId: String, onDone: (Boolean) -> Unit) {
+        try {
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance()
+            db.getReference("kurotek_devices").child(deviceId)
+                .removeValue()
+                .addOnSuccessListener { onDone(true) }
+                .addOnFailureListener { onDone(false) }
+        } catch (e: Exception) { onDone(false) }
+    }
 }
 
 // =========================================================================
@@ -710,6 +796,7 @@ fun AdminLoginScreen(viewModel: LicenseManagerViewModel) {
 
 enum class DashboardTab {
     LICENSES,
+    FIREBASE_DEVICES,
     AUDIT_LOGS
 }
 
@@ -902,6 +989,10 @@ fun AdminDashboardScreen(viewModel: LicenseManagerViewModel) {
                         }
                     }
                 }
+                DashboardTab.FIREBASE_DEVICES -> {
+                    LaunchedEffect(Unit) { viewModel.loadFirebaseDevices() }
+                    FirebaseDevicesTab(viewModel = viewModel)
+                }
                 DashboardTab.AUDIT_LOGS -> {
                     if (auditLogs.isEmpty()) {
                         Box(
@@ -1041,46 +1132,41 @@ fun TabSelector(activeTab: DashboardTab, onTabSelected: (DashboardTab) -> Unit) 
             .weight(1f)
             .background(GlowPurplePink, RoundedCornerShape(10.dp))
             .padding(vertical = 10.dp)
-        
-        val unselectedModifier = Modifier
-            .weight(1f)
-            .clickable { onTabSelected(DashboardTab.AUDIT_LOGS) }
-            .padding(vertical = 10.dp)
-
-        // Tab: Logs
-        Box(
-            modifier = if (activeTab == DashboardTab.AUDIT_LOGS) selectedModifier else unselectedModifier,
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "السجل الأمني 🛡️",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
-        }
 
         // Tab: Licenses
         Box(
             modifier = if (activeTab == DashboardTab.LICENSES) {
-                Modifier
-                    .weight(1f)
-                    .background(GlowPurplePink, RoundedCornerShape(10.dp))
-                    .padding(vertical = 10.dp)
+                Modifier.weight(1f).background(GlowPurplePink, RoundedCornerShape(10.dp)).padding(vertical = 10.dp)
             } else {
-                Modifier
-                    .weight(1f)
-                    .clickable { onTabSelected(DashboardTab.LICENSES) }
-                    .padding(vertical = 10.dp)
+                Modifier.weight(1f).clickable { onTabSelected(DashboardTab.LICENSES) }.padding(vertical = 10.dp)
             },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "إدارة التراخيص 🔑",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
+            Text(text = "التراخيص 🔑", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+        }
+
+        // Tab: Firebase Devices
+        Box(
+            modifier = if (activeTab == DashboardTab.FIREBASE_DEVICES) {
+                Modifier.weight(1f).background(Color(0xFF10B981), RoundedCornerShape(10.dp)).padding(vertical = 10.dp)
+            } else {
+                Modifier.weight(1f).clickable { onTabSelected(DashboardTab.FIREBASE_DEVICES) }.padding(vertical = 10.dp)
+            },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "الأجهزة 📱", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+        }
+
+        // Tab: Logs
+        Box(
+            modifier = if (activeTab == DashboardTab.AUDIT_LOGS) {
+                Modifier.weight(1f).background(GlowPurplePink, RoundedCornerShape(10.dp)).padding(vertical = 10.dp)
+            } else {
+                Modifier.weight(1f).clickable { onTabSelected(DashboardTab.AUDIT_LOGS) }.padding(vertical = 10.dp)
+            },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "السجل 🛡️", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
         }
     }
 }
@@ -1838,6 +1924,172 @@ fun AuditLogItem(log: AuditLog) {
                 textAlign = TextAlign.Right,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+    }
+}
+
+// =========================================================================
+// SCREEN: FIREBASE DEVICES TAB
+// =========================================================================
+
+@Composable
+fun FirebaseDevicesTab(viewModel: LicenseManagerViewModel) {
+    val context = LocalContext.current
+    val devices by viewModel.firebaseDevices.collectAsState()
+    val isLoading by viewModel.isLoadingDevices.collectAsState()
+
+    if (isLoading && devices.isEmpty()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                CircularProgressIndicator(color = GlowEmeraldGreen)
+                Text("جاري تحميل الأجهزة من Firebase...", color = TextSecondary, fontSize = 13.sp)
+            }
+        }
+        return
+    }
+
+    if (devices.isEmpty()) {
+        Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(56.dp))
+                Text("لا توجد أجهزة مسجلة بعد", color = TextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center)
+                Text("ستظهر الأجهزة هنا بمجرد أن يفتح المستخدمون تطبيق كروتك", color = TextSecondary.copy(alpha = 0.6f), fontSize = 11.sp, textAlign = TextAlign.Center)
+            }
+        }
+        return
+    }
+
+    val blockedCount = devices.count { it.isBlocked }
+    val trialCount = devices.count { it.status == "trial" && !it.isBlocked }
+    val activeCount = devices.count { it.status == "active" && !it.isBlocked }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            listOf(
+                Triple("الكل", devices.size.toString(), AccentPurple),
+                Triple("نشط", activeCount.toString(), GlowEmeraldGreen),
+                Triple("تجريبي", trialCount.toString(), Color(0xFFFBBF24)),
+                Triple("محظور", blockedCount.toString(), StatusRed)
+            ).forEach { (label, count, color) ->
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+                    border = BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(count, color = color, fontSize = 18.sp, fontWeight = FontWeight.Black)
+                        Text(label, color = TextSecondary, fontSize = 9.sp)
+                    }
+                }
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(devices, key = { it.deviceId }) { device ->
+                FirebaseDeviceCard(
+                    device = device,
+                    onBlock = {
+                        viewModel.blockFirebaseDevice(device.deviceId) { success ->
+                            Toast.makeText(context, if (success) "✅ تم حظر الجهاز فوراً" else "❌ فشل الحظر", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onUnblock = {
+                        viewModel.unblockFirebaseDevice(device.deviceId) { success ->
+                            Toast.makeText(context, if (success) "✅ تم إلغاء الحظر" else "❌ فشل إلغاء الحظر", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onDelete = {
+                        viewModel.deleteFirebaseDevice(device.deviceId) { success ->
+                            Toast.makeText(context, if (success) "🗑️ تم حذف بيانات الجهاز" else "❌ فشل الحذف", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FirebaseDeviceCard(
+    device: LicenseManagerViewModel.FirebaseDevice,
+    onBlock: () -> Unit,
+    onUnblock: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val sdf = remember { java.text.SimpleDateFormat("yyyy/MM/dd HH:mm", java.util.Locale.getDefault()) }
+    val installDateStr = if (device.installDate > 0) sdf.format(java.util.Date(device.installDate)) else "غير معروف"
+    val lastSeenStr = if (device.lastSeen > 0) sdf.format(java.util.Date(device.lastSeen)) else "غير معروف"
+
+    val (statusColor, statusText) = when {
+        device.isBlocked -> StatusRed to "محظور 🚫"
+        device.status == "active" -> GlowEmeraldGreen to "نشط ✅"
+        else -> Color(0xFFFBBF24) to "تجريبي ⏳"
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = if (device.isBlocked) Color(0xFF1A0000) else SurfaceDark),
+        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .background(statusColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .border(BorderStroke(1.dp, statusColor.copy(alpha = 0.3f)), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(statusText, color = statusColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Text(device.deviceName, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Column(
+                modifier = Modifier.fillMaxWidth().background(Color.Black.copy(alpha = 0.2f), RoundedCornerShape(10.dp)).padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text("النظام: ${device.androidVersion}", color = TextSecondary, fontSize = 11.sp)
+                Text("إصدار التطبيق: v${device.appVersion}", color = TextSecondary, fontSize = 11.sp)
+                Text("تاريخ التثبيت: $installDateStr", color = TextSecondary, fontSize = 11.sp)
+                Text("آخر تشغيل: $lastSeenStr", color = TextSecondary, fontSize = 11.sp)
+                Text("ID: ${device.deviceId}", color = TextSecondary.copy(alpha = 0.4f), fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusRed),
+                    border = BorderStroke(1.dp, StatusRed.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Text("حذف 🗑️", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = if (device.isBlocked) onUnblock else onBlock,
+                    colors = ButtonDefaults.buttonColors(containerColor = if (device.isBlocked) GlowEmeraldGreen else StatusRed),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(2f),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Text(
+                        if (device.isBlocked) "إلغاء الحظر ✅" else "حظر الجهاز 🔴",
+                        fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White
+                    )
+                }
+            }
         }
     }
 }

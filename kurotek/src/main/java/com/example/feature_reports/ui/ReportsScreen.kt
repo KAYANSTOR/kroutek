@@ -1,4 +1,4 @@
-﻿package com.example.feature_reports.ui
+package com.example.feature_reports.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -40,24 +40,24 @@ import android.net.Uri
 import android.util.Log
 import java.io.File
 import java.nio.charset.StandardCharsets
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-// ==========================================
-// TAB 3: التقارير (Reports Tab)
-// ==========================================
+import com.example.ui.MainViewModel
+
 @Composable
-fun ReportsTab(viewModel: MainViewModel) {
-    val allTransactions by viewModel.allTransactions.collectAsState()
-    val allDeposits by viewModel.allDeposits.collectAsState()
-    val allPendingApprovals by viewModel.allPendingApprovals.collectAsState()
-    val isDark by viewModel.isDarkTheme.collectAsState()
+fun ReportsTab(
+    salesViewModel: com.example.ui.SalesViewModel,
+    dashboardViewModel: com.example.ui.DashboardViewModel,
+    mainViewModel: com.example.ui.MainViewModel
+) {
+    val allTransactions by salesViewModel.transactions.collectAsState()
+    val allDeposits by salesViewModel.deposits.collectAsState()
+    val allPendingApprovals by dashboardViewModel.pendingApprovals.collectAsState()
+    val isDark by mainViewModel.isDarkTheme.collectAsState()
     val context = LocalContext.current
 
     var filterDateByFormatted by remember { 
         mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())) 
     }
-
-    // Source filter: "all", "جيب", "جوالي", "ون كاش"
     var selectedSourceFilter by remember { mutableStateOf("all") }
     
     // Status filter: "all", "success", "pending"

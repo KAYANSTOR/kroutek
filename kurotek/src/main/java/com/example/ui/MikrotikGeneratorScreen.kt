@@ -39,11 +39,12 @@ import com.example.ui.theme.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.ui.MikrotikViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MikrotikGeneratorScreen(
-    viewModel: MainViewModel,
+    viewModel: MikrotikViewModel,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
