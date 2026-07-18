@@ -125,20 +125,123 @@ fun DistributorSystemScreen(
     var lastInvoiceText by remember { mutableStateOf("") }
     var lastInvoicePhone by remember { mutableStateOf("") }
 
-@Composable
-fun DistributorSystemScreen(
-    viewModel: MainViewModel,
-    selectedTab: Int
-) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    
-    // UI State
-    var calcType by remember { mutableStateOf("REGULAR") } // "REGULAR" or "PRO"
-    val pricesState by viewModel.distributorPrices.collectAsState()
-    
-    // ... we still need other states here. Wait! I must be careful not to remove the states.
-    // Let me just replace the Scaffold and TopAppBar, leaving the variables intact.
+    // Tab labels and icons
+    val tabItems = listOf(
+        Triple("الحاسبة", Icons.Default.Calculate, Icons.Outlined.Calculate),
+        Triple("العملاء", Icons.Default.People, Icons.Outlined.People),
+        Triple("المالية", Icons.Default.AccountBalance, Icons.Outlined.AccountBalance),
+        Triple("التقارير", Icons.Default.BarChart, Icons.Outlined.BarChart),
+        Triple("التسعيرة", Icons.Default.PriceChange, Icons.Outlined.PriceChange),
+    )
+
+    Scaffold(
+        containerColor = DeepBlack,
+        topBar = {
+            Surface(
+                color = Color(0xFF0F172A),
+                shadowElevation = 4.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // زر رجوع / تبديل
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF1E293B))
+                            .clickable { onBack() }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(18.dp))
+                            Text("SMS", color = Color(0xFF10B981), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    // العنوان
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🏪 نظام الموزع", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                        Text(tabItems.getOrNull(selectedTab)?.first ?: "", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                    }
+
+                    // أيقونة الوضع
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Store, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(22.dp))
+                    }
+                }
+            }
+        },
+        bottomBar = {
+            Surface(
+                color = Color(0xFF0F172A),
+                shadowElevation = 8.dp,
+                modifier = Modifier.navigationBarsPadding()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    tabItems.forEachIndexed { index, (label, filledIcon, outlinedIcon) ->
+                        val isSelected = selectedTab == index
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable { selectedTab = index },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .background(
+                                            if (isSelected) Color(0xFF10B981).copy(alpha = 0.15f) else Color.Transparent,
+                                            RoundedCornerShape(8.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (isSelected) filledIcon else outlinedIcon,
+                                        contentDescription = label,
+                                        tint = if (isSelected) Color(0xFF10B981) else Color(0xFF64748B),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) Color(0xFF10B981) else Color(0xFF64748B),
+                                    fontSize = 9.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            when (selectedTab) {
                 0 -> {
                     // CALCULATOR & SALES TAB
                     LazyColumn(
@@ -147,107 +250,160 @@ fun DistributorSystemScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // Toggle Regular / Pro
+                        // Toggle Regular / Pro - مبسط
                         item {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(14.dp))
                                     .background(Color(0xFF0F172A))
                                     .padding(4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (calcType == "PRO") BrandPrimaryRed else Color.Transparent)
-                                        .clickable { calcType = "PRO" }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("أسعار الموزع بور (PRO) ⚡", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (calcType == "REGULAR") BrandPrimaryRed else Color.Transparent)
-                                        .clickable { calcType = "REGULAR" }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("أسعار الموزع عادية (REGULAR)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                listOf("REGULAR" to "عادي 🟡", "PRO" to "بور ⚡").forEach { (type, label) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(
+                                                if (calcType == type) Color(0xFF10B981) else Color.Transparent
+                                            )
+                                            .clickable { calcType = type }
+                                            .padding(vertical = 12.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            label,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        // Categories Quantities Inputs
+                        // Categories Quantities Inputs - محسّنة
                         item {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 categories.forEach { cat ->
                                     val qty = quantities[cat] ?: 0
                                     val triple = pricesState[cat] ?: Triple(0.0, 0.0, 0.0)
                                     val price = if (calcType == "REGULAR") triple.second else triple.third
-                                    
+                                    val subtotal = qty * price
+                                    val hasQty = qty > 0
+
                                     Card(
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                                        shape = RoundedCornerShape(12.dp),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (hasQty) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFF0F172A)
+                                        ),
+                                        shape = RoundedCornerShape(14.dp),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (hasQty) Color(0xFF10B981).copy(alpha = 0.4f) else Color.White.copy(alpha = 0.06f)
+                                        )
                                     ) {
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(12.dp),
+                                                .padding(horizontal = 14.dp, vertical = 10.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            // Controls
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = { if (qty > 0) quantities[cat] = qty - 1 },
-                                                    modifier = Modifier
-                                                        .size(36.dp)
-                                                        .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                                            // Controls + Subtotal
+                                            Column(horizontalAlignment = Alignment.Start) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                                 ) {
-                                                    Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White)
-                                                }
-                                                
-                                                Text(
-                                                    text = qty.toString(),
-                                                    color = Color.White,
-                                                    fontWeight = FontWeight.Black,
-                                                    fontSize = 16.sp,
-                                                    modifier = Modifier.width(30.dp),
-                                                    textAlign = TextAlign.Center
-                                                )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(34.dp)
+                                                            .background(
+                                                                if (qty > 0) Color(0xFFDC2626) else Color(0xFF1E293B),
+                                                                RoundedCornerShape(8.dp)
+                                                            )
+                                                            .clickable { if (qty > 0) quantities[cat] = qty - 1 },
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                                    }
 
-                                                IconButton(
-                                                    onClick = { quantities[cat] = qty + 1 },
-                                                    modifier = Modifier
-                                                        .size(36.dp)
-                                                        .background(Color.White.copy(alpha = 0.05f), CircleShape)
-                                                ) {
-                                                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                                    // Text input for direct quantity typing
+                                                    var qtyText by remember(qty) { mutableStateOf(if(qty > 0) qty.toString() else "") }
+                                                    
+                                                    androidx.compose.foundation.text.BasicTextField(
+                                                        value = qtyText,
+                                                        onValueChange = { newVal ->
+                                                            // Only allow digits
+                                                            val digitsOnly = newVal.filter { it.isDigit() }
+                                                            qtyText = digitsOnly
+                                                            val newQty = digitsOnly.toIntOrNull() ?: 0
+                                                            quantities[cat] = newQty
+                                                        },
+                                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                        textStyle = androidx.compose.ui.text.TextStyle(
+                                                            color = if (hasQty) Color(0xFF10B981) else Color.White,
+                                                            fontWeight = FontWeight.Black,
+                                                            fontSize = 18.sp,
+                                                            textAlign = TextAlign.Center
+                                                        ),
+                                                        modifier = Modifier
+                                                            .width(44.dp)
+                                                            .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
+                                                            .border(1.dp, if (hasQty) Color(0xFF10B981).copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
+                                                            .padding(vertical = 4.dp),
+                                                        decorationBox = { innerTextField ->
+                                                            Box(contentAlignment = Alignment.Center) {
+                                                                if (qtyText.isEmpty()) {
+                                                                    Text("0", color = Color.White.copy(alpha = 0.5f), fontSize = 18.sp, fontWeight = FontWeight.Black)
+                                                                }
+                                                                innerTextField()
+                                                            }
+                                                        }
+                                                    )
+
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(34.dp)
+                                                            .background(Color(0xFF10B981), RoundedCornerShape(8.dp))
+                                                            .clickable { quantities[cat] = qty + 1 },
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                                    }
+                                                }
+                                                if (hasQty) {
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        "= ${subtotal.toInt()} ر.ي",
+                                                        color = Color(0xFF10B981),
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
                                                 }
                                             }
 
                                             // Info
                                             Column(horizontalAlignment = Alignment.End) {
-                                                Text("فئة $cat ر.ي", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                                Text("سعر الكرت: $price ر.ي", color = TextSecondary, fontSize = 11.sp)
+                                                Text(
+                                                    "فئة $cat ر.ي",
+                                                    color = Color.White,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp
+                                                )
+                                                Text(
+                                                    "السعر: ${price.toInt()} ر.ي",
+                                                    color = Color(0xFF94A3B8),
+                                                    fontSize = 12.sp
+                                                )
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+
 
                         // Select Customer Shop Dropdown
                         item {
@@ -427,11 +583,10 @@ fun DistributorSystemScreen(
                                     
                                     val invoiceDetails = buildString {
                                         appendLine("===============================")
-                                        appendLine("     فاتورة مبيعات كروت الموزع     ")
+                                        appendLine("         فاتورة مبيعات كروت         ")
                                         appendLine("===============================")
                                         appendLine("التاريخ: $dateStr")
                                         appendLine("العميل: $shopName")
-                                        appendLine("نوع التسعير: " + if (calcType == "REGULAR") "عادية" else "بور (PRO)")
                                         appendLine("-------------------------------")
                                         categories.forEach { cat ->
                                             val qty = quantities[cat] ?: 0
@@ -1345,7 +1500,10 @@ fun DistributorSystemScreen(
                         }
                     }
                 }
-            }
+            } // closes when
+
+        } // closes Box
+    } // closes Scaffold
 
     // Invoice Sharing / Print dialogue
     if (showInvoiceDialog) {

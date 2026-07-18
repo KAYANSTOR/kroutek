@@ -64,6 +64,13 @@ class AuthViewModel(
     val isPermissionDismissed: StateFlow<Boolean> = repository.isPermissionDismissed
     val generatedSerials: StateFlow<Set<String>> = repository.generatedSerials
 
+    private val _networkName = MutableStateFlow("شبكة الدحشة")
+    val networkName: StateFlow<String> = _networkName.asStateFlow()
+
+    fun setActivated(activated: Boolean, key: String) {
+        repository.setActivated(activated, key)
+    }
+
     // ─────────────────────────────────────────────
     // دخول / خروج (PIN محلي)
     // ─────────────────────────────────────────────

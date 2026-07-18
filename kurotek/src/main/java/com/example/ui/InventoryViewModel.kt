@@ -31,7 +31,7 @@ class InventoryViewModel(private val coreContainer: CoreContainer) : ViewModel()
 
     // المجموع الكلي للكروت غير المستخدمة
     val totalUnusedCount: StateFlow<Int> = allCards
-        .map { cards -> cards.count { !it.isUsed } }
+        .map { cards -> cards.count { !it.used } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun getCountForCategory(category: Int): StateFlow<Int> =

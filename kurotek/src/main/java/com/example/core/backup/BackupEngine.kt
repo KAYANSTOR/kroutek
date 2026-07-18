@@ -13,6 +13,7 @@ import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * BackupEngine (BackupRepositoryImpl)
@@ -42,8 +43,8 @@ class BackupEngine(
             val file = File(backupDir, fileName)
 
             // جمع البيانات
-            val transactions = cardRepository.getAllTransactions()
-            val deposits = cardRepository.getAllDeposits()
+            val transactions = cardRepository.getAllTransactions().firstOrNull() ?: emptyList()
+            val deposits = cardRepository.getAllDeposits().firstOrNull() ?: emptyList()
 
             val payload = JSONObject().apply {
                 put("version", 1)
@@ -54,7 +55,7 @@ class BackupEngine(
                         put("phone", tx.phone)
                         put("amount", tx.amount)
                         put("walletType", tx.walletType)
-                        put("timestamp", tx.timestamp)
+                        put("timestamp", tx.createdAt)
                     }
                 }))
                 put("deposits", JSONArray(deposits.map { dep ->

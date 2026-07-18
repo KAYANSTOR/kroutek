@@ -89,6 +89,14 @@ class CoreContainer private constructor(private val context: Context) {
         SellCardUseCase(inventoryRepository, salesRepository, validateSmsAmountUseCase)
     }
 
+    val approvePendingUseCase by lazy {
+        ApprovePendingUseCase(approvalsRepository, sellCardUseCase)
+    }
+
+    val rejectPendingUseCase by lazy {
+        RejectPendingUseCase(approvalsRepository, salesRepository)
+    }
+
     val generateReportUseCase by lazy { GenerateReportUseCase(reportsRepository) }
 
     val syncNowUseCase by lazy { SyncNowUseCase(syncRepository) }

@@ -61,10 +61,10 @@ class MainActivity : ComponentActivity() {
                 // MainViewModel is injected via Hilt
                 val mainViewModel: MainViewModel = hiltViewModel()
 
-                val authFactory = remember { AuthViewModelFactory(coreContainer) }
+                val authFactory = remember { AuthViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val authViewModel: com.example.ui.AuthViewModel = viewModel(factory = authFactory)
 
-                val smsFactory = remember { SmsViewModelFactory(coreContainer) }
+                val smsFactory = remember { SmsViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 // SmsViewModel is kept for background SMS processing service only
                 @Suppress("UNUSED_VARIABLE")
                 val smsViewModel: com.example.ui.SmsViewModel = viewModel(factory = smsFactory)
@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                 val settingsFactory = remember { SettingsViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val settingsViewModel: com.example.ui.SettingsViewModel = viewModel(factory = settingsFactory)
 
-                val distFactory = remember { DistributorViewModelFactory(coreContainer) }
+                val distFactory = remember { DistributorViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val distributorViewModel: com.example.ui.DistributorViewModel = viewModel(factory = distFactory)
 
                 // New Clean Architecture ViewModels
@@ -184,7 +184,7 @@ class MainActivity : ComponentActivity() {
                                 MainDashboardScreen(
                                     mainViewModel = mainViewModel,
                                     authViewModel = authViewModel,
-                                    smsViewModel = settingsViewModel,
+                                    settingsViewModel = settingsViewModel,
                                     distributorViewModel = distributorViewModel,
                                     dashboardViewModel = dashboardViewModel,
                                     inventoryViewModel = inventoryViewModel,
@@ -193,7 +193,7 @@ class MainActivity : ComponentActivity() {
                                     walletViewModel = walletViewModel,
                                     mikrotikViewModel = mikrotikViewModel,
                                     onLogout = {
-                                        authViewModel.setActivated(false)
+                                        authViewModel.setActivated(false, "")
                                         SyncService.stopService(context)
                                         currentScreen = AppScreen.LOGIN
                                     }
@@ -204,7 +204,7 @@ class MainActivity : ComponentActivity() {
                                 MainDashboardScreen(
                                     mainViewModel = mainViewModel,
                                     authViewModel = authViewModel,
-                                    smsViewModel = settingsViewModel,
+                                    settingsViewModel = settingsViewModel,
                                     distributorViewModel = distributorViewModel,
                                     dashboardViewModel = dashboardViewModel,
                                     inventoryViewModel = inventoryViewModel,
@@ -213,7 +213,7 @@ class MainActivity : ComponentActivity() {
                                     walletViewModel = walletViewModel,
                                     mikrotikViewModel = mikrotikViewModel,
                                     onLogout = {
-                                        authViewModel.setActivated(false)
+                                        authViewModel.setActivated(false, "")
                                         currentScreen = AppScreen.LOGIN
                                     }
                                 )

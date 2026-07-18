@@ -31,12 +31,6 @@ android {
       keyAlias = "upload"
       keyPassword = System.getenv("KEY_PASSWORD")
     }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
-    }
   }
 
   buildTypes {
@@ -46,9 +40,6 @@ android {
       isShrinkResources = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
-    }
-    debug {
-      signingConfig = signingConfigs.getByName("debugConfig")
     }
   }
   compileOptions {
@@ -92,7 +83,7 @@ dependencies {
   implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
-  // implementation(libs.androidx.datastore.preferences)
+  implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -103,7 +94,7 @@ dependencies {
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
   implementation(libs.firebase.appcheck.recaptcha)
-  implementation(libs.firebase.database.ktx)   // ← أجهزة كروتك والـ Kill Switch
+  implementation(libs.firebase.database)   // ← أجهزة كروتك والـ Kill Switch
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.logging.interceptor)

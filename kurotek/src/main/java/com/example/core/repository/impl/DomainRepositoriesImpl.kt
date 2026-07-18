@@ -10,6 +10,7 @@ import com.example.core.repository.WalletRepository
 import com.example.database.CardRepository
 import com.example.models.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 // ─────────────────────────────────────────────────────────────────────
 // Helper — Wraps any suspend call into Resource
@@ -49,24 +50,24 @@ class WalletRepositoryImpl(private val db: CardRepository) : WalletRepository {
 // ─────────────────────────────────────────────────────────────────────
 class ReportsRepositoryImpl(private val db: CardRepository) : ReportsRepository {
     override suspend fun getTransactionsByDateRange(from: Long, to: Long): List<Transaction> =
-        db.getAllTransactions().replayCache.firstOrNull()
-            ?.filter { it.timestamp in from..to } ?: emptyList()
+        db.getAllTransactions().firstOrNull()
+            ?.filter { it.createdAt in from..to } ?: emptyList()
 
     override suspend fun getTotalRevenue(): Double =
-        db.getAllTransactions().replayCache.firstOrNull()
+        db.getAllTransactions().firstOrNull()
             ?.sumOf { it.amount.toDouble() } ?: 0.0
 
     override suspend fun getRevenueByWallet(walletType: String): Double =
-        db.getAllTransactions().replayCache.firstOrNull()
+        db.getAllTransactions().firstOrNull()
             ?.filter { it.walletType == walletType }
             ?.sumOf { it.amount.toDouble() } ?: 0.0
 
     override suspend fun getDepositsByDateRange(from: Long, to: Long): List<Deposit> =
-        db.getAllDeposits().replayCache.firstOrNull()
-            ?.filter { it.timestamp in from..to } ?: emptyList()
+        db.getAllDeposits().firstOrNull()
+            ?.filter { it.createdAt in from..to } ?: emptyList()
 
     override suspend fun getMappings(): List<CustomerMapping> =
-        db.getAllMappings().replayCache.firstOrNull() ?: emptyList()
+        db.getAllMappings().firstOrNull() ?: emptyList()
 
     override suspend fun insertMapping(uniqueId: String, phone: String, name: String, walletType: String) =
         wrap { db.insertMapping(uniqueId, phone, name, walletType) }
@@ -79,7 +80,7 @@ class ReportsRepositoryImpl(private val db: CardRepository) : ReportsRepository 
 // ─────────────────────────────────────────────────────────────────────
 class DashboardRepositoryImpl(private val db: CardRepository) : DashboardRepository {
     override suspend fun getPendingApprovalsCount() =
-        db.getAllPendingApprovals().replayCache.firstOrNull()?.size ?: 0
+        db.getAllPendingApprovals().firstOrNull()?.size ?: 0
 
     override suspend fun getLowStockCategories(threshold: Int): List<Int> {
         val cats = db.categories.value
@@ -88,14 +89,14 @@ class DashboardRepositoryImpl(private val db: CardRepository) : DashboardReposit
 
     override suspend fun getTodayTransactionsCount(): Int {
         val dayStart = System.currentTimeMillis() - 86_400_000L
-        return db.getAllTransactions().replayCache.firstOrNull()
-            ?.filter { it.timestamp >= dayStart }?.size ?: 0
+        return db.getAllTransactions().firstOrNull()
+            ?.filter { it.createdAt >= dayStart }?.size ?: 0
     }
 
     override suspend fun getTodayRevenue(): Double {
         val dayStart = System.currentTimeMillis() - 86_400_000L
-        return db.getAllTransactions().replayCache.firstOrNull()
-            ?.filter { it.timestamp >= dayStart }
+        return db.getAllTransactions().firstOrNull()
+            ?.filter { it.createdAt >= dayStart }
             ?.sumOf { it.amount.toDouble() } ?: 0.0
     }
 
@@ -106,7 +107,7 @@ class DashboardRepositoryImpl(private val db: CardRepository) : DashboardReposit
 // ApprovalsRepositoryImpl
 // ─────────────────────────────────────────────────────────────────────
 class ApprovalsRepositoryImpl(private val db: CardRepository) : ApprovalsRepository {
-    override suspend fun getAllPendingApprovals() = db.getAllPendingApprovals().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getAllPendingApprovals() = db.getAllPendingApprovals().firstOrNull() ?: emptyList()
     override suspend fun getPendingApproval(id: Int) = db.getPendingApproval(id)
     override suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: Int): Resource<Long> {
         val id = db.insertPendingApproval(phone, amount, walletType, isAccountCode, depositId)
@@ -121,7 +122,7 @@ class ApprovalsRepositoryImpl(private val db: CardRepository) : ApprovalsReposit
 // NetworkRepositoryImpl (Mikrotik/NAS cards)
 // ─────────────────────────────────────────────────────────────────────
 class NetworkRepositoryImpl(private val db: CardRepository) : NetworkRepository {
-    override suspend fun getAllGeneratedCards() = db.getAllGeneratedCards().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getAllGeneratedCards() = db.getAllGeneratedCards().firstOrNull() ?: emptyList()
     override suspend fun insertGeneratedCard(card: GeneratedMikrotikCard) = wrap { db.insertGeneratedCard(card) }
     override suspend fun insertGeneratedCards(cards: List<GeneratedMikrotikCard>) = wrap { db.insertGeneratedCards(cards) }
     override suspend fun markCardAsPrinted(id: Int, printed: Boolean) = wrap { db.markGeneratedCardAsPrinted(id, printed) }
@@ -136,17 +137,17 @@ class NetworkRepositoryImpl(private val db: CardRepository) : NetworkRepository 
 // DistributorRepositoryImpl
 // ─────────────────────────────────────────────────────────────────────
 class DistributorRepositoryImpl(private val db: CardRepository) : DistributorRepository {
-    override suspend fun getCustomers() = db.getDistributorCustomers().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getCustomers() = db.getDistributorCustomers().firstOrNull() ?: emptyList()
     override suspend fun getCustomerById(id: String) = db.getDistributorCustomerByIdDirect(id)
     override suspend fun insertCustomer(customer: DistributorCustomer) = wrap { db.insertDistributorCustomer(customer) }
     override suspend fun deleteCustomer(id: String) = wrap { db.deleteDistributorCustomer(id) }
-    override suspend fun getTransactions() = db.getDistributorTransactions().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getTransactions() = db.getDistributorTransactions().firstOrNull() ?: emptyList()
     override suspend fun insertTransaction(tx: DistributorTransaction) = wrap { db.insertDistributorTransaction(tx) }
     override suspend fun deleteTransaction(id: String, customerId: String) = wrap { db.deleteDistributorTransaction(id, customerId) }
-    override suspend fun getExpenses() = db.getDistributorExpenses().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getExpenses() = db.getDistributorExpenses().firstOrNull() ?: emptyList()
     override suspend fun insertExpense(expense: DistributorExpense) = wrap { db.insertDistributorExpense(expense) }
     override suspend fun deleteExpense(id: String) = wrap { db.deleteDistributorExpense(id) }
-    override suspend fun getCapitals() = db.getDistributorCapitals().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getCapitals() = db.getDistributorCapitals().firstOrNull() ?: emptyList()
     override suspend fun insertCapital(capital: DistributorCapital) = wrap { db.insertDistributorCapital(capital) }
     override suspend fun deleteCapital(id: String) = wrap { db.deleteDistributorCapital(id) }
     override suspend fun clearAllData() = wrap { db.clearAllDistributorData() }

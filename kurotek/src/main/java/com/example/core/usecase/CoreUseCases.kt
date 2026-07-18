@@ -75,6 +75,57 @@ class SellCardUseCase(
     }
 }
 
+/**
+ * ApprovePendingUseCase — يُركّز منطق الموافقة على عملية معلقة
+ * يُستدعى من DashboardViewModel ويُزيل Business Logic من الـ ViewModel.
+ */
+class ApprovePendingUseCase(
+    private val approvalsRepository: com.example.core.repository.ApprovalsRepository,
+    private val sellCardUseCase: SellCardUseCase
+) {
+    suspend operator fun invoke(
+        pendingId: Int,
+        onSmsSend: suspend (recipient: String, message: String) -> Boolean
+    ): Resource<String> {
+        val pending = approvalsRepository.getPendingApproval(pendingId)
+            ?: return Resource.Error(Exception("الطلب رقم $pendingId غير موجود"))
+
+        val result = sellCardUseCase(
+            phone = pending.phone,
+            amount = pending.amount,
+            walletType = pending.walletType,
+            onSmsSend = onSmsSend
+        )
+
+        return if (result is Resource.Success) {
+            approvalsRepository.deletePendingApproval(pendingId)
+            Resource.Success(result.data)
+        } else {
+            result
+        }
+    }
+}
+
+/**
+ * RejectPendingUseCase — يُسجّل رفض الطلب كمعاملة ويحذفه من قائمة الانتظار.
+ */
+class RejectPendingUseCase(
+    private val approvalsRepository: com.example.core.repository.ApprovalsRepository,
+    private val salesRepository: com.example.core.repository.SalesRepository
+) {
+    suspend operator fun invoke(pendingId: Int): Resource<Unit> {
+        val pending = approvalsRepository.getPendingApproval(pendingId)
+            ?: return Resource.Error(Exception("الطلب غير موجود"))
+        salesRepository.insertTransaction(
+            phone = pending.phone,
+            amount = pending.amount,
+            cardCode = "مرفوض يدوياً",
+            walletType = pending.walletType
+        )
+        return approvalsRepository.deletePendingApproval(pendingId)
+    }
+}
+
 // ══════════════════════════════════════════════════════════
 // Reports UseCases
 // ══════════════════════════════════════════════════════════
@@ -153,12 +204,24 @@ class DistributorSaleUseCase(
                 quantities.filter { it.value > 0 }.entries.joinToString { "${it.value}×${it.key}" }
             }"
             distributorRepository.insertTransaction(
-                DistributorTransaction(UUID.randomUUID().toString(), customerId, "sale", totalAmount, notes)
+                DistributorTransaction(
+                    id = UUID.randomUUID().toString(),
+                    customerId = customerId,
+                    type = "sale",
+                    amount = totalAmount,
+                    notes = notes
+                )
             )
 
             if (receivedAmount > 0) {
                 distributorRepository.insertTransaction(
-                    DistributorTransaction(UUID.randomUUID().toString(), customerId, "payment", receivedAmount, "دفعة نقدية")
+                    DistributorTransaction(
+                        id = UUID.randomUUID().toString(),
+                        customerId = customerId,
+                        type = "payment",
+                        amount = receivedAmount,
+                        notes = "دفعة نقدية"
+                    )
                 )
             }
 
@@ -181,4 +244,40 @@ class DistributorSaleUseCase(
 
 class RenewLicenseUseCase(private val licenseEngine: com.example.core.license.LicenseEngine) {
     suspend operator fun invoke(newKey: String) = licenseEngine.activateLicense(newKey)
+}
+
+class ActivateLicenseUseCase(private val licenseEngine: com.example.core.license.LicenseEngine) {
+    suspend operator fun invoke(key: String): com.example.core.model.Resource<com.example.core.model.LicenseStatus> = licenseEngine.activateLicense(key)
+}
+
+class ValidateLicenseUseCase(private val licenseEngine: com.example.core.license.LicenseEngine) {
+    suspend operator fun invoke(): com.example.core.model.LicenseStatus = licenseEngine.getLicenseStatus()
+}
+
+class CreateBackupUseCase(private val backupEngine: com.example.core.backup.BackupEngine) {
+    suspend operator fun invoke(): com.example.core.model.Resource<com.example.core.model.BackupInfo> = backupEngine.createBackup()
+}
+
+class RestoreBackupUseCase(private val backupEngine: com.example.core.backup.BackupEngine) {
+    suspend operator fun invoke(backupId: String): com.example.core.model.Resource<Unit> = backupEngine.restoreBackup(backupId)
+}
+
+class SyncTransactionsUseCase(private val syncRepository: SyncRepositoryImpl) {
+    suspend operator fun invoke(payload: String) {
+        syncRepository.enqueueSyncTask(com.example.core.model.SyncTask(
+            id = java.util.UUID.randomUUID().toString(),
+            type = "transaction",
+            payload = payload,
+            status = com.example.core.model.SyncStatus.PENDING,
+            retryCount = 0,
+            createdAt = System.currentTimeMillis(),
+            lastAttemptAt = null
+        ))
+    }
+}
+
+class ValidateSmsAmountUseCase() {
+    operator fun invoke(amount: Int): Boolean {
+        return amount in listOf(100, 200, 250, 300, 500, 1000)
+    }
 }

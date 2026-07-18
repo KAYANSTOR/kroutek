@@ -5,7 +5,7 @@ import com.example.core.security.SecurityEngine
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 /**
@@ -62,7 +62,7 @@ class NetworkEngineImpl(
     val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(config.baseUrl)
         .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(MoshiConverterFactory.create())
         .build()
 
     /**

@@ -20,17 +20,22 @@ class SessionManager(
     private val onLogout: suspend () -> Unit
 ) : TokenProvider {
 
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-
-    private val securePrefs = EncryptedSharedPreferences.create(
-        context,
-        "secure_session",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val securePrefs = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+            
+        EncryptedSharedPreferences.create(
+            context,
+            "secure_session",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        context.getSharedPreferences("secure_session", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences("secure_session", Context.MODE_PRIVATE)
+    }
 
     private val _currentSession = MutableStateFlow<UserSession?>(null)
     val currentSession: StateFlow<UserSession?> get() = _currentSession

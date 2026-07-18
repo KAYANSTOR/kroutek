@@ -33,8 +33,14 @@ import kotlinx.coroutines.flow.callbackFlow
  */
 object FirebaseManager {
 
-    private val database = FirebaseDatabase.getInstance()
-    private val devicesRef = database.getReference("kurotek_devices")
+    private val database: FirebaseDatabase? by lazy {
+        try {
+            FirebaseDatabase.getInstance()
+        } catch (e: Exception) {
+            null
+        }
+    }
+    private val devicesRef by lazy { database?.getReference("kurotek_devices") }
 
     /** حالات الجهاز */
     enum class DeviceStatus { TRIAL, ACTIVE, BLOCKED, LOADING, ERROR }
@@ -56,7 +62,7 @@ object FirebaseManager {
      */
     fun getDeviceId(context: Context): String {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-            ?: Build.SERIAL.ifEmpty { "unknown_${System.currentTimeMillis()}" }
+            ?: "unknown_${System.currentTimeMillis()}"
     }
 
     /**
@@ -65,7 +71,7 @@ object FirebaseManager {
      */
     fun registerOrUpdateDevice(context: Context, appVersion: String = "1.0") {
         val deviceId = getDeviceId(context)
-        val deviceRef = devicesRef.child(deviceId)
+        val deviceRef = devicesRef?.child(deviceId) ?: return
 
         deviceRef.get().addOnSuccessListener { snapshot ->
             if (!snapshot.exists()) {
@@ -104,39 +110,47 @@ object FirebaseManager {
      */
     fun observeKillSwitch(context: Context): Flow<DeviceStatus> = callbackFlow {
         val deviceId = getDeviceId(context)
-        val deviceRef = devicesRef.child(deviceId)
+        val deviceRef = devicesRef?.child(deviceId)
+        
+        var listener: ValueEventListener? = null
 
-        trySend(DeviceStatus.LOADING)
+        if (deviceRef == null) {
+            trySend(DeviceStatus.ERROR)
+            close()
+        } else {
+            trySend(DeviceStatus.LOADING)
 
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (!snapshot.exists()) {
-                    // جهاز غير مسجّل بعد → حالة تجريبية
-                    trySend(DeviceStatus.TRIAL)
-                    return
+            listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (!snapshot.exists()) {
+                        trySend(DeviceStatus.TRIAL)
+                        return
+                    }
+
+                    val isBlocked = snapshot.child("isBlocked").getValue(Boolean::class.java) ?: false
+                    val statusStr = snapshot.child("status").getValue(String::class.java) ?: "trial"
+
+                    val status = when {
+                        isBlocked -> DeviceStatus.BLOCKED
+                        statusStr == "active" -> DeviceStatus.ACTIVE
+                        else -> DeviceStatus.TRIAL
+                    }
+                    trySend(status)
                 }
 
-                val isBlocked = snapshot.child("isBlocked").getValue(Boolean::class.java) ?: false
-                val statusStr = snapshot.child("status").getValue(String::class.java) ?: "trial"
-
-                val status = when {
-                    isBlocked -> DeviceStatus.BLOCKED
-                    statusStr == "active" -> DeviceStatus.ACTIVE
-                    else -> DeviceStatus.TRIAL
+                override fun onCancelled(error: DatabaseError) {
+                    trySend(DeviceStatus.ERROR)
                 }
-                trySend(status)
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                trySend(DeviceStatus.ERROR)
-            }
+            deviceRef.addValueEventListener(listener)
         }
 
-        deviceRef.addValueEventListener(listener)
-
-        // تنظيف عند إلغاء الـ Flow
+        // تنظيف عند إلغاء الـ Flow (يجب أن يتم استدعاؤه دائماً لتجنب الانهيار)
         awaitClose {
-            deviceRef.removeEventListener(listener)
+            if (listener != null) {
+                deviceRef?.removeEventListener(listener)
+            }
         }
     }
 
@@ -145,10 +159,10 @@ object FirebaseManager {
      * يُستدعى من تطبيق الإدارة (Admin Panel)
      */
     fun activateDevice(deviceId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        devicesRef.child(deviceId).updateChildren(
+        devicesRef?.child(deviceId)?.updateChildren(
             mapOf("status" to "active", "isBlocked" to false)
-        ).addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onError(it.message ?: "خطأ غير معروف") }
+        )?.addOnSuccessListener { onSuccess() }
+            ?.addOnFailureListener { onError(it.message ?: "خطأ غير معروف") }
     }
 
     /**
@@ -156,9 +170,9 @@ object FirebaseManager {
      * يُستدعى من تطبيق الإدارة (Admin Panel)
      */
     fun blockDevice(deviceId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        devicesRef.child(deviceId).updateChildren(
+        devicesRef?.child(deviceId)?.updateChildren(
             mapOf("isBlocked" to true, "status" to "blocked")
-        ).addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onError(it.message ?: "خطأ غير معروف") }
+        )?.addOnSuccessListener { onSuccess() }
+            ?.addOnFailureListener { onError(it.message ?: "خطأ غير معروف") }
     }
 }

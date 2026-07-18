@@ -21,6 +21,7 @@ class PendingRequestQueueImpl(private val context: Context) : PendingRequestQueu
         val key = "req_${System.currentTimeMillis()}_${counter}"
         prefs.edit().putString(key, "$endpointName||$requestData").apply()
         counter++
+        Unit
     }
 
     override suspend fun dequeue(): String? = mutex.withLock {
