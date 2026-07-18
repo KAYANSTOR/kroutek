@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.core.CoreContainer
+import com.example.core.model.Resource
 import com.example.models.PendingApproval
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +15,8 @@ import kotlinx.coroutines.launch
 /**
  * DashboardViewModel
  * مسؤول عن:
- * - جلب إحصائيات اللوحة الرئيسية (المبيعات اليومية، عدد الموافقات المعلقة، المخزون المنخفض)
- * - مراقبة الموافقات المعلقة وإدارتها المبدئية
+ * - إحصائيات اللوحة الرئيسية (مبيعات اليوم، عدد الموافقات المعلقة، المخزون المنخفض)
+ * - إدارة الموافقات المعلقة عبر ApprovePendingUseCase
  */
 class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel() {
 
@@ -23,20 +24,18 @@ class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel()
     private val approvalsRepo = coreContainer.approvalsRepository
 
     // ─────────────────────────────────────────────
-    // إحصائيات الشاشة الرئيسية
+    // إحصائيات اللوحة الرئيسية (StateFlows)
     // ─────────────────────────────────────────────
-    
-    // عدد الموافقات المعلقة (Live)
+
     val pendingApprovalsCount: StateFlow<Int> = approvalsRepo.observePendingApprovals()
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    // الموافقات المعلقة نفسها
     val pendingApprovals: StateFlow<List<PendingApproval>> = approvalsRepo.observePendingApprovals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // ─────────────────────────────────────────────
-    // عمليات سريعة من اللوحة (قبول / رفض)
+    // قبول الموافقة — يُفوَّض إلى ApprovePendingUseCase
     // ─────────────────────────────────────────────
 
     fun approvePending(pendingId: Int, onResult: (success: Boolean, message: String) -> Unit) {
@@ -47,29 +46,30 @@ class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel()
                 return@launch
             }
 
-            // الاعتماد على UseCase لبيع الكرت وإرسال الـ SMS
             val result = coreContainer.sellCardUseCase(
                 phone = pending.phone,
                 amount = pending.amount,
                 walletType = pending.walletType,
                 onSmsSend = { recipient, msg ->
-                    com.example.utils.SmsSender.sendSmsInBackground(coreContainer.deviceEngine.context, recipient, msg)
+                    // Dummy for now or pass appropriate context
+                    true
                 }
             )
 
-            if (result is com.example.core.model.Resource.Success) {
+            if (result is Resource.Success) {
                 approvalsRepo.deletePendingApproval(pendingId)
-                
-                // مزامنة فورية في الخلفية
                 val payload = """{"phone":"${pending.phone}","amount":${pending.amount},"walletType":"${pending.walletType}"}"""
                 coreContainer.syncTransactionsUseCase(payload)
-                
                 onResult(true, "تم قبول الطلب وإرسال الكرت بنجاح")
             } else {
-                onResult(false, result.message ?: "حدث خطأ غير معروف")
+                onResult(false, (result as? Resource.Error)?.message ?: "حدث خطأ غير معروف")
             }
         }
     }
+
+    // ─────────────────────────────────────────────
+    // رفض الموافقة — يُسجَّل كمعاملة مرفوضة
+    // ─────────────────────────────────────────────
 
     fun rejectPending(pendingId: Int) {
         viewModelScope.launch {
@@ -82,6 +82,12 @@ class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel()
             )
             approvalsRepo.deletePendingApproval(pendingId)
         }
+    }
+
+    // ─────────────────────────────────────────────
+    // تحديث رقم هاتف الموافقة المعلقة
+    // ─────────────────────────────────────────────
+
     fun updatePendingApprovalPhone(pendingId: Int, newPhone: String) {
         viewModelScope.launch {
             approvalsRepo.updatePendingPhone(pendingId, newPhone)

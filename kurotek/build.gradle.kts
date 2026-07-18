@@ -63,12 +63,16 @@ ksp {
   arg("room.generateKotlin", "false")
 }
 
+googleServices {
+  missingGoogleServicesStrategy = com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy.WARN
+}
+
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
-  implementation(libs.firebase.database.ktx)
-  implementation(libs.firebase.analytics.ktx)
-  implementation(libs.firebase.messaging.ktx)
+  implementation(libs.firebase.database)
+  implementation(libs.firebase.analytics)
+  implementation(libs.firebase.messaging)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
@@ -77,9 +81,11 @@ dependencies {
   implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
+  implementation("androidx.security:security-crypto:1.1.0-alpha06")
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
@@ -105,6 +111,11 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
+  implementation(libs.androidx.work.runtime.ktx)
+  testImplementation(libs.mockk)
+  testImplementation(libs.mockito.kotlin)
+  androidTestImplementation(libs.mockk.android)
+  androidTestImplementation(libs.androidx.work.testing)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
   "ksp"(libs.hilt.android.compiler)

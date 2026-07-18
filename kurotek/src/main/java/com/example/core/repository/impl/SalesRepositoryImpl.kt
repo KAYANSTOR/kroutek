@@ -6,13 +6,14 @@ import com.example.database.CardRepository
 import com.example.models.Deposit
 import com.example.models.Transaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 class SalesRepositoryImpl(private val db: CardRepository) : SalesRepository {
     override suspend fun insertTransaction(phone: String, amount: Int, cardCode: String, walletType: String) =
         wrap { db.insertTransaction(phone, amount, cardCode, walletType) }
 
     override suspend fun getAllTransactions(): List<Transaction> =
-        db.getAllTransactions().replayCache.firstOrNull() ?: emptyList()
+        db.getAllTransactions().firstOrNull() ?: emptyList()
 
     override suspend fun clearAllTransactions() = wrap { db.clearAllTransactions() }
 
@@ -22,7 +23,7 @@ class SalesRepositoryImpl(private val db: CardRepository) : SalesRepository {
     }
 
     override suspend fun getAllDeposits(): List<Deposit> =
-        db.getAllDeposits().replayCache.firstOrNull() ?: emptyList()
+        db.getAllDeposits().firstOrNull() ?: emptyList()
 
     override suspend fun clearAllDeposits() = wrap { db.clearAllDeposits() }
 

@@ -73,6 +73,8 @@ fun SettingsTab(
     var feedbackMsg by remember { mutableStateOf("") }
     var feedbackSuccess by remember { mutableStateOf(true) }
 
+    val isDistributorModeActive by distributorViewModel.isDistributorModeActive.collectAsState()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +82,48 @@ fun SettingsTab(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.End
     ) {
-        // Option toggles (SMS and Notifications)
+        // ✅ بطاقة تبديل وضع الموزع / SMS - في أعلى الإعدادات
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+                border = BorderStroke(1.5.dp, if (isDistributorModeActive) androidx.compose.ui.graphics.Color(0xFF10B981).copy(alpha = 0.4f) else (if (isDarkTheme) androidx.compose.ui.graphics.Color(0xFF2D2D2D) else androidx.compose.ui.graphics.Color(0x0A000000))),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Switch(
+                        checked = isDistributorModeActive,
+                        onCheckedChange = { distributorViewModel.setDistributorModeActive(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = androidx.compose.ui.graphics.Color.White,
+                            checkedTrackColor = androidx.compose.ui.graphics.Color(0xFF10B981),
+                            uncheckedThumbColor = TextSecondary,
+                            uncheckedTrackColor = SurfaceDark
+                        )
+                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = if (isDistributorModeActive) "وضع الموزع النشط 🏪" else "وضع نظام SMS/الرسائل 📱",
+                            color = if (isDistributorModeActive) androidx.compose.ui.graphics.Color(0xFF10B981) else (if (isDarkTheme) GlowPurplePink else androidx.compose.ui.graphics.Color(0xFF7B1FA2)),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = if (isDistributorModeActive) "انقر للتبديل إلى نظام الرسائل SMS" else "انقر للتبديل إلى نظام الموزع والحاسبة",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+        }
+
         item {
             Card(
                 colors = CardDefaults.cardColors(containerColor = SurfaceDark),

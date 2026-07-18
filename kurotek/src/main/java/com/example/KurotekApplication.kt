@@ -1,14 +1,28 @@
 package com.example
 
 import android.app.Application
+import androidx.work.Configuration
+import com.example.core.CoreContainer
+import com.example.core.work.KurotekWorkerFactory
 import dagger.hilt.android.HiltAndroidApp
 
 /**
- * نقطة انطلاق Hilt لكامل التطبيق. لا يوجد هنا أي منطق أعمال عمداً — فقط
- * تفعيل حاوية الحقن (Dependency Injection Container) التي يولّدها Hilt.
- *
- * هذه أول لبنة في مسار حقن التبعيات الكامل الموصوف في القسم 5 و6 من
- * docs/RESTRUCTURING_PLAN.md.
+ * KurotekApplication
+ * يتم فيه تهيئة CoreContainer كـ Singleton لجميع أجزاء التطبيق.
+ * ويتم تهيئة WorkManager مع Custom WorkerFactory لحقن التبعيات.
+ * نقطة انطلاق Hilt لكامل التطبيق أيضاً.
  */
 @HiltAndroidApp
-class KurotekApplication : Application()
+class KurotekApplication : Application(), Configuration.Provider {
+
+    // Singleton Container 
+    val coreContainer: CoreContainer by lazy {
+        CoreContainer.getInstance(this)
+    }
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(KurotekWorkerFactory(coreContainer))
+            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .build()
+}

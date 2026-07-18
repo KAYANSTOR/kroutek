@@ -41,8 +41,6 @@ import android.util.Log
 import java.io.File
 import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.withContext
-import com.example.ui.MainViewModel
-
 @Composable
 fun ReportsTab(
     salesViewModel: com.example.ui.SalesViewModel,

@@ -106,12 +106,24 @@ class DistributorViewModel(
                     quantities.filter { it.value > 0 }.map { "${it.value}×${it.key}" }.joinToString(", ")
                 }"
                 repository.insertDistributorTransaction(
-                    DistributorTransaction(UUID.randomUUID().toString(), customerId, "sale", totalAmount, notes)
+                    DistributorTransaction(
+                        id = UUID.randomUUID().toString(),
+                        customerId = customerId,
+                        type = "sale",
+                        amount = totalAmount,
+                        notes = notes
+                    )
                 )
 
                 if (receivedAmount > 0) {
                     repository.insertDistributorTransaction(
-                        DistributorTransaction(UUID.randomUUID().toString(), customerId, "payment", receivedAmount, "دفعة مسددة نقداً")
+                        DistributorTransaction(
+                            id = UUID.randomUUID().toString(),
+                            customerId = customerId,
+                            type = "payment",
+                            amount = receivedAmount,
+                            notes = "دفعة مسددة نقداً"
+                        )
                     )
                 }
 
@@ -143,7 +155,13 @@ class DistributorViewModel(
     fun insertDistributorTransaction(customerId: String, type: String, amount: Double, notes: String) {
         viewModelScope.launch {
             repository.insertDistributorTransaction(
-                DistributorTransaction(UUID.randomUUID().toString(), customerId, type, amount, notes)
+                DistributorTransaction(
+                    id = UUID.randomUUID().toString(),
+                    customerId = customerId,
+                    type = type,
+                    amount = amount,
+                    notes = notes
+                )
             )
         }
     }

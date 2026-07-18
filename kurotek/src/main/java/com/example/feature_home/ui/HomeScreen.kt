@@ -373,163 +373,123 @@ fun HomeScreen(
             }
         }
 
-        // 3. Services Grid (6 Buttons matching Screenshot 2 precisely)
+        // 3. Distributor Mode Banner + Services Grid
+        item {
+            // بانر التبديل إلى وضع الموزع - واضح وبارز
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1A14)),
+                border = BorderStroke(1.5.dp, Color(0xFF10B981).copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        distributorViewModel.setDistributorModeActive(true)
+                        Toast.makeText(context, "🏪 جاري التبديل إلى نظام الموزع...", Toast.LENGTH_SHORT).show()
+                    }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // زر الانتقال
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFF10B981), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Text("انتقل ←", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+
+                    // وصف
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "🏪 وضع الموزع",
+                            color = Color(0xFF10B981),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp
+                        )
+                        Text(
+                            "حاسبة البيع • إدارة العملاء • التقارير المالية",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    // أيقونة
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(Color(0xFF10B981).copy(alpha = 0.15f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Store, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(24.dp))
+                    }
+                }
+            }
+        }
+
+        // 3b. Services Grid (5 Buttons)
         item {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "الخدمات والأنظمة المتكاملة ⚡",
+                    text = "الخدمات والأنظمة ⚡",
                     color = PureWhite,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Right
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                
+
                 // Row 1
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Service 1: وضع الموزع
+                    // Service 1: توليد كروت
                     Card(
                         colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.15f)),
+                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(90.dp)
-                            .clickable { 
-                                distributorViewModel.setDistributorModeActive(true)
-                                Toast.makeText(context, "تم التبديل إلى وضع الموزع 🔄", Toast.LENGTH_SHORT).show()
-                            }
+                        modifier = Modifier.weight(1f).height(90.dp).clickable { onNavigateToSubScreen("mikrotik") }
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.Calculate, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("وضع الموزع", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Service 2: ديون البقالات
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.15f)),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(90.dp)
-                            .clickable {
-                                distributorViewModel.setDistributorModeActive(true)
-                            }
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.Storefront, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("ديون البقالات", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Service 3: توليد كروت
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.15f)),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(90.dp)
-                            .clickable { onNavigateToSubScreen("mikrotik") }
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
+                        Column(modifier = Modifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Icon(Icons.Default.Router, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.height(6.dp))
                             Text("توليد كروت", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                }
 
-                // Row 2
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Service 4: مخزن الكروت
+                    // Service 2: مخزن الكروت
                     Card(
                         colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.15f)),
+                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(90.dp)
-                            .clickable { onNavigateToTab(1) }
+                        modifier = Modifier.weight(1f).height(90.dp).clickable { onNavigateToTab(1) }
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
+                        Column(modifier = Modifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Icon(Icons.Default.Inventory, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.height(6.dp))
                             Text("مخزن الكروت", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    // Service 5: مزامنة SMS
+                    // Service 3: مزامنة SMS
                     Card(
                         colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.15f)),
+                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(90.dp)
-                            .clickable { onNavigateToTab(2) }
+                        modifier = Modifier.weight(1f).height(90.dp).clickable { onNavigateToTab(2) }
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
+                        Column(modifier = Modifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Icon(Icons.Default.Sync, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.height(6.dp))
                             Text("مزامنة SMS", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Service 6: سندات ومصاريف
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.15f)),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(90.dp)
-                            .clickable {
-                                distributorViewModel.setDistributorModeActive(true)
-                            }
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("سندات ومصاريف", color = PureWhite, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

@@ -5,6 +5,7 @@ import com.example.core.repository.InventoryRepository
 import com.example.database.CardRepository
 import com.example.models.Card
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 class InventoryRepositoryImpl(private val db: CardRepository) : InventoryRepository {
     override suspend fun insertCard(card: Card) = wrap { db.insertCardsList(listOf(card)) }
@@ -19,7 +20,7 @@ class InventoryRepositoryImpl(private val db: CardRepository) : InventoryReposit
     override suspend fun getUnusedCardByCategory(category: Int): Card? = db.getUnusedCardByCategory(category)
     override suspend fun getUnusedCountByCategory(category: Int): Int = db.getUnusedCountByCategoryDirect(category)
     override suspend fun getTotalUnusedCount(): Int = 0 // TODO: add direct count to CardRepository
-    override suspend fun getAllCards(): List<Card> = db.getAllCards().replayCache.firstOrNull() ?: emptyList()
+    override suspend fun getAllCards(): List<Card> = db.getAllCards().firstOrNull() ?: emptyList()
     override suspend fun clearAllCards() = wrap { db.clearAllCards() }
     override fun observeAllCards(): Flow<List<Card>> = db.getAllCards()
     override fun observeCountByCategory(category: Int): Flow<Int> = db.getUnusedCountByCategory(category)
