@@ -276,7 +276,7 @@ fun ReportsTab(
                                     modifier = Modifier
                                         .fillMaxHeight()
                                         .weight(jeebPercentage.toFloat().coerceAtLeast(0.02f))
-                                        .background(Color(0xFF2196F3))
+                                        .background(BrandSecondaryBlue)
                                 )
                             }
                             if (jawaliPercentage > 0) {
@@ -324,7 +324,7 @@ fun ReportsTab(
                                 Text("جوالي: ${(jawaliPercentage * 100).toInt()}%", color = TextSecondary, fontSize = 9.sp)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF2196F3)))
+                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(BrandSecondaryBlue))
                                 Text("محفظة كاش: ${(jeebPercentage * 100).toInt()}%", color = TextSecondary, fontSize = 9.sp)
                             }
                         }
@@ -339,8 +339,8 @@ fun ReportsTab(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF2196F3).copy(alpha = 0.08f), RoundedCornerShape(10.dp))
-                                .border(BorderStroke(0.5.dp, Color(0xFF2196F3).copy(alpha = 0.15f)), RoundedCornerShape(10.dp))
+                                .background(BrandSecondaryBlue.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                                .border(BorderStroke(0.5.dp, BrandSecondaryBlue.copy(alpha = 0.15f)), RoundedCornerShape(10.dp))
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically

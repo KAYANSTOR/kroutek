@@ -48,6 +48,18 @@ interface CardDao {
     @Query("UPDATE cards SET used = 1 WHERE id = :id")
     suspend fun markCardAsUsed(id: Int)
 
+    // ⚠️ عملية ذرّية (Room @Transaction): تسحب كرتاً غير مستخدم وتعلّمه "مستخدم"
+    // ضمن معاملة قاعدة بيانات واحدة غير قابلة للمقاطعة. تمنع هذا سيناريو
+    // سحب نفس الكرت لعميلين مختلفين لو وصل إيداعان لنفس الفئة في نفس اللحظة
+    // (كان هذا ممكناً سابقاً عبر استدعاء getUnusedCardByCategory ثم
+    // markCardAsUsed كخطوتين منفصلتين قابلتين للتداخل).
+    @androidx.room.Transaction
+    suspend fun claimUnusedCardByCategory(category: Int): Card? {
+        val card = getUnusedCardByCategory(category) ?: return null
+        markCardAsUsed(card.id)
+        return card
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCard(card: Card)
 

@@ -436,6 +436,17 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    if (isVerifying) {
+                        Text(
+                            text = "⏳ قد يستغرق التفعيل حتى 30 ثانية عند أول محاولة، يرجى الانتظار...",
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.85f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
                     // Normal System Entry Button
                     Button(
                         onClick = { handleNormalEntry() },

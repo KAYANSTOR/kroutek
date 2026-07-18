@@ -30,7 +30,7 @@ class PendingApprovalReceiver : BroadcastReceiver() {
         val goAsyncPending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val repository = CardRepository(context)
+                val repository = CardRepository.getInstance(context)
                 val pending = repository.getPendingApproval(pendingId)
                 if (pending == null) {
                     goAsyncPending.finish()
@@ -47,12 +47,9 @@ class PendingApprovalReceiver : BroadcastReceiver() {
                     val walletType = pending.walletType
                     val isAccountCode = pending.isAccountCode || (mappedCustomer != null)
 
-                    // Get an unused card
-                    val card = repository.getUnusedCardByCategory(amount)
+                    // Get an unused card (عملية ذرّية: سحب + تعليم "مستخدم" معاً)
+                    val card = repository.claimUnusedCardByCategory(amount)
                     if (card != null) {
-                        // Mark card as used immediately
-                        repository.markCardAsUsed(card.id)
-
                         // Format card details
                         // تفكيك وتنسيق مخرجات نص الكارت لتصبح رأسية بالكامل مع استخدام فواصل الأسطر (\n)
                         // بحيث لا تجتمع التسمية والقيمة في سطر واحد لتجنب تجميع التسمية مع القيمة عملاً بالتعليمات المحددة.
