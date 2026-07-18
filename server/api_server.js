@@ -5,17 +5,48 @@
  * Implements: JWT Auth, HMAC Request Signing, Rate Limiting, SQL Injection Block, and Audit Logging.
  */
 
+// يحمّل متغيرات ملف server/.env المحلي تلقائياً إن وُجد (لا يؤثر إطلاقاً إن
+// كانت متغيرات البيئة مضبوطة فعلاً عبر الاستضافة أو PM2 أو أي مصدر آخر).
+// المسار مبني على __dirname بدل الاعتماد على مجلد العمل الحالي (cwd)، حتى
+// يعمل سواء شُغّل السيرفر من جذر المشروع أو من داخل مجلد server/.
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
+// -------------------------------------------------------------
 // Security Keys Configuration
-const JWT_SECRET = process.env.JWT_SECRET || "KayanSoftSuperSecretJWTKey2026Encryption";
-const HMAC_SECRET = process.env.HMAC_SECRET || "KayanSoftSecurityHMACKey2026Master";
+// -------------------------------------------------------------
+// ⚠️ لا قيم افتراضية للأسرار هنا بعد الآن (كانت هذه القيم مكشوفة سابقاً
+// كنص صريح في هذا الملف العلني على GitHub، ويجب اعتبارها "محروقة" فوراً).
+// يفشل تشغيل السيرفر عمداً إن لم تُضبط هذه المتغيرات، بدل العمل بأسرار معروفة للجميع.
+// راجع server/.env.example لمعرفة المتغيرات المطلوبة.
+const REQUIRED_ENV_VARS = [
+    'JWT_SECRET',
+    'HMAC_SECRET',
+    'ADMIN_USERNAME',
+    'ADMIN_PASSWORD'
+];
+
+const missingEnvVars = REQUIRED_ENV_VARS.filter((key) => !process.env[key] || !process.env[key].trim());
+if (missingEnvVars.length > 0) {
+    console.error('=============================================================');
+    console.error('❌ فشل بدء تشغيل السيرفر: متغيرات بيئة إلزامية غير مضبوطة:');
+    missingEnvVars.forEach((key) => console.error(`   - ${key}`));
+    console.error('راجع ملف server/.env.example، وقم بإنشاء ملف .env حقيقي بقيم جديدة قوية.');
+    console.error('=============================================================');
+    process.exit(1);
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const HMAC_SECRET = process.env.HMAC_SECRET;
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // Middleware
 app.use(cors());
@@ -193,8 +224,7 @@ app.post('/api/v1/serial/validate', verifyRequestSignature, (req, res) => {
 app.post('/api/v1/admin/login', (req, res) => {
     const { username, password } = req.body;
     
-    // Highly secure owner credentials matching user intent
-    if (username === "owner" && password === "KayanKurotek2026!") {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         const token = jwt.sign({ username, role: "super_admin" }, JWT_SECRET, { expiresIn: '24h' });
         addLog(req.ip, "/api/v1/admin/login", 200, `Admin logged in successfully.`);
         return res.json({ success: true, token });
@@ -211,10 +241,6 @@ function authenticateAdmin(req, res, next) {
         return res.status(401).json({ success: false, message: "غير مصرح به: الرجاء تسجيل الدخول أولاً!" });
     }
     const token = authHeader.split(' ')[1];
-    if (token === 'relaxed_access_authorized_by_owner') {
-        req.admin = { username: "owner", role: "super_admin" };
-        return next();
-    }
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.admin = decoded;
@@ -348,8 +374,7 @@ function gatewayAuth(req, res, next) {
     const user = auth[0];
     const pass = auth[1];
 
-    // Highly secure owner credentials
-    if (user === 'owner' && pass === 'KayanKurotek2026!') {
+    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
         return next();
     } else {
         res.setHeader('WWW-Authenticate', 'Basic realm="Secure Serial Dashboard"');

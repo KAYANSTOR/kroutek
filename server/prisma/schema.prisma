@@ -1,0 +1,323 @@
+// =============================================================
+// Kurotek — Prisma Schema (PostgreSQL)
+// =============================================================
+// هذا الملف يوثّق أيضاً القرارات التصميمية المتخذة، حتى يراجعها صاحب
+// المشروع أو أي وكيل ذكاء اصطناعي لاحق بدل افتراضها بصمت:
+//
+// 1) Account = "التاجر/الموزّع" (المستأجر Tenant). كل بيانات العمل
+//    (الكروت، العملاء، المعاملات، بيانات الموزّع) مربوطة بحساب واحد.
+//    يقابل هذا مفهومياً جدول `clients` القديم في server/database.sql.
+//
+// 2) Device = جهاز فعلي واحد يعمل عليه التطبيق، مرتبط بحساب واحد.
+//    يدعم هذا مستقبلاً تعدد الأجهزة لنفس التاجر (لم يكن مدعوماً سابقاً:
+//    كان كل سيريال مقفلاً على جهاز واحد فقط عبر device_id في الجدول القديم).
+//
+// 3) License = سجل الترخيص/الاشتراك (يقابل جدول `activation_serials`
+//    القديم بالضبط، دون تغيير في المعنى). "الاشتراكات" (Subscriptions)
+//    التي طُلبت كوحدة (Module) منفصلة هي منطق أعمال (تجديد، تنبيهات
+//    انتهاء) يُبنى فوق هذا النموذج نفسه، وليست جدولاً مختلفاً — تفادياً
+//    لتكرار نفس البيانات في مكانين. إن كان المقصود شيئاً مختلفاً
+//    (مثلاً: خطط اشتراك متعددة المستويات/فوترة)، يجب توضيحه لاحقاً.
+//
+// 4) كل كيان عمل (Card, CardTransaction, ...) يحمل:
+//    - id (UUID): مُولَّد على الجهاز نفسه وقت الإنشاء (Client-generated)،
+//      حتى يعمل التطبيق أوفلاين بالكامل دون انتظار رقم من السيرفر.
+//    - localId (Int?): يحفظ رقم Room التلقائي القديم (autoIncrement)
+//      فقط كمرجعية أثناء فترة الانتقال، إلى أن تُهاجَر جداول Room نفسها
+//      لاستخدام UUID كمفتاح أساسي (خطوة منفصلة على جانب الأندرويد لم
+//      تُنفَّذ بعد — يجب إنجازها قبل ربط المزامنة الفعلية).
+//    - updatedAt: يُستخدم كمؤشر مزامنة (Sync Cursor) لكل سحب (Pull).
+//    - deletedAt: حذف ناعم (Tombstone) بدل الحذف الفعلي، ليصل حذف
+//      السجل لبقية الأجهزة عبر المزامنة بدل أن "يختفي" بصمت.
+//
+// ⚠️ لم يُشغَّل `prisma migrate` أو `prisma generate` فعلياً في بيئة
+// التنفيذ الحالية (Sandbox) لأن ثنائيات Prisma الداخلية تُحمَّل من
+// binaries.prisma.sh وهذا النطاق غير مسموح به في إعدادات الشبكة هنا.
+// تم التحقق من سلامة هذا التصميم منطقياً عبر ترجمته يدوياً لـ SQL خام
+// وتجربته على PostgreSQL محلي حقيقي (انظر server/prisma/manual-validation.sql).
+// يجب تشغيل `npx prisma migrate dev` محلياً عندك (حيث الإنترنت متاح
+// بالكامل) لتوليد الـ migration الرسمي قبل أي استخدام في الإنتاج.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// الهوية والتراخيص (تقابل server/database.sql القديم بالمعنى)
+// -------------------------------------------------------------
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
+
+model Account {
+  id          String   @id @default(uuid())
+  name        String
+  networkName String   @map("network_name")
+  phone       String
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  devices               Device[]
+  licenses              License[]
+  cards                 Card[]
+  cardTransactions      CardTransaction[]
+  pendingApprovals      PendingApproval[]
+  deposits              Deposit[]
+  customerMappings      CustomerMapping[]
+  generatedMikrotikCards GeneratedMikrotikCard[]
+  distributorCustomers  DistributorCustomer[]
+  distributorTransactions DistributorTransaction[]
+  distributorExpenses   DistributorExpense[]
+  distributorCapitals   DistributorCapital[]
+
+  @@map("accounts")
+}
+
+model Device {
+  id         String   @id @default(uuid())
+  accountId  String   @map("account_id")
+  deviceId   String   @unique @map("device_id") // معرف الجهاز المادي (نفس القيمة المستخدمة حالياً في التفعيل)
+  lastSeenAt DateTime? @map("last_seen_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  licenses License[]
+
+  @@map("devices")
+}
+
+// يقابل جدول activation_serials القديم تماماً بنفس الحقول والمعاني.
+model License {
+  id              String    @id @default(uuid())
+  accountId       String    @map("account_id")
+  deviceId        String?   @map("device_id") // FK اختياري لـ Device.id (null قبل أول تفعيل)
+  serialKey       String    @unique @map("serial_key")
+  durationMonths  Int       @default(12) @map("duration_months")
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime  @map("end_date")
+  status          LicenseStatus @default(UNUSED)
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  device  Device? @relation(fields: [deviceId], references: [id])
+
+  @@map("licenses")
+}
+
+enum LicenseStatus {
+  UNUSED
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model SecurityLog {
+  id             String   @id @default(uuid())
+  ipAddress      String   @map("ip_address")
+  endpoint       String
+  requestPayload String?  @map("request_payload")
+  statusCode     Int      @map("status_code")
+  message        String?
+  timestamp      DateTime @default(now())
+
+  @@map("security_logs")
+}
+
+// -------------------------------------------------------------
+// بيانات العمل المُزامَنة (مطابقة لنماذج Room في kurotek/.../models)
+// -------------------------------------------------------------
+
+model Card {
+  id        String    @id @default(uuid())
+  localId   Int?      @map("local_id")
+  accountId String    @map("account_id")
+  category  Int
+  code      String
+  username  String    @default("")
+  password  String    @default("")
+  used      Boolean   @default(false)
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, category, used])
+  @@map("cards")
+}
+
+model CardTransaction {
+  id         String    @id @default(uuid())
+  localId    Int?      @map("local_id")
+  accountId  String    @map("account_id")
+  phone      String
+  amount     Int
+  cardCode   String    @map("card_code")
+  walletType String    @default("") @map("wallet_type")
+  createdAt  DateTime  @map("created_at") // الوقت الأصلي من الجهاز (وليس وقت وصول السيرفر)
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, createdAt])
+  @@map("card_transactions")
+}
+
+model PendingApproval {
+  id            String    @id @default(uuid())
+  localId       Int?      @map("local_id")
+  accountId     String    @map("account_id")
+  phone         String
+  amount        Int
+  walletType    String    @map("wallet_type")
+  isAccountCode Boolean   @default(false) @map("is_account_code")
+  depositLocalId Int      @default(0) @map("deposit_local_id")
+  createdAt     DateTime  @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("pending_approvals")
+}
+
+model Deposit {
+  id          String    @id @default(uuid())
+  localId     Int?      @map("local_id")
+  accountId   String    @map("account_id")
+  phone       String
+  amount      Int
+  walletType  String    @map("wallet_type")
+  isShared    Boolean   @map("is_shared")
+  cardDetails String    @default("") @map("card_details")
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("deposits")
+}
+
+model CustomerMapping {
+  id                String    @id @default(uuid())
+  localId           Int?      @map("local_id")
+  accountId         String    @map("account_id")
+  customerUniqueId  String    @map("customer_unique_id")
+  basicPhone        String    @map("basic_phone")
+  customerName      String    @default("") @map("customer_name")
+  walletType        String    @default("جيب") @map("wallet_type")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, customerUniqueId])
+  @@map("customer_mappings")
+}
+
+model GeneratedMikrotikCard {
+  id          String    @id @default(uuid())
+  localId     Int?      @map("local_id")
+  accountId   String    @map("account_id")
+  category    Int
+  pin         String
+  username    String    @default("")
+  password    String    @default("")
+  printed     Boolean   @default(false)
+  transferred Boolean   @default(false)
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("generated_mikrotik_cards")
+}
+
+// بيانات "نظام الموزّع" — تستخدم أصلاً UUID كمفتاح أساسي في Room، لذا لا
+// حاجة لحقل localId هنا (لا مشكلة تحويل مفاتيح مثل بقية الجداول أعلاه).
+
+model DistributorCustomer {
+  id              String    @id // نفس الـ UUID المُولَّد على التطبيق أصلاً
+  accountId       String    @map("account_id")
+  name            String
+  totalSales      Decimal   @default(0) @map("total_sales") @db.Decimal(14, 2)
+  totalPayments   Decimal   @default(0) @map("total_payments") @db.Decimal(14, 2)
+  currentBalance  Decimal   @default(0) @map("current_balance") @db.Decimal(14, 2)
+  createdAt       DateTime  @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("distributor_customers")
+}
+
+model DistributorTransaction {
+  id         String    @id
+  accountId  String    @map("account_id")
+  customerId String    @map("customer_id")
+  date       DateTime
+  type       String // "sale" | "payment"
+  amount     Decimal   @db.Decimal(14, 2)
+  notes      String    @default("")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, customerId])
+  @@map("distributor_transactions")
+}
+
+model DistributorExpense {
+  id          String    @id
+  accountId   String    @map("account_id")
+  category    String
+  amount      Decimal   @db.Decimal(14, 2)
+  description String    @default("")
+  date        DateTime
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("distributor_expenses")
+}
+
+model DistributorCapital {
+  id          String    @id
+  accountId   String    @map("account_id")
+  type        String // "deposit" | "withdraw"
+  amount      Decimal   @db.Decimal(14, 2)
+  description String    @default("")
+  date        DateTime
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("distributor_capitals")
+}

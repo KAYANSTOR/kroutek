@@ -30,8 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.database.CardRepository
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.network.SyncService
 import com.example.security.FirebaseManager
 import com.example.ui.*
@@ -40,6 +39,7 @@ import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.DeepBlack
 import com.example.ui.theme.SurfaceDark
 import com.example.ui.theme.PureWhite
+import dagger.hilt.android.AndroidEntryPoint
 
 enum class AppScreen {
     LOGIN,
@@ -48,6 +48,7 @@ enum class AppScreen {
     LOGS
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,9 +58,8 @@ class MainActivity : ComponentActivity() {
                 val context = LocalContext.current
                 val coreContainer = remember { com.example.core.CoreContainer.getInstance(context) }
                 
-                // Old ViewModels (being phased out or refactored)
-                val factory = remember { MainViewModelFactory(coreContainer.cardRepository) }
-                val mainViewModel: MainViewModel = viewModel(factory = factory)
+                // MainViewModel is injected via Hilt
+                val mainViewModel: MainViewModel = hiltViewModel()
 
                 val authFactory = remember { AuthViewModelFactory(coreContainer) }
                 val authViewModel: com.example.ui.AuthViewModel = viewModel(factory = authFactory)
