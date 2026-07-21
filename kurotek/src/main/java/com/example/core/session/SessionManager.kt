@@ -32,7 +32,7 @@ class SessionManager(
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
         context.getSharedPreferences("secure_session", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("secure_session", Context.MODE_PRIVATE)
     }

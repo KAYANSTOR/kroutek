@@ -15,9 +15,10 @@ class InventoryRepositoryImpl(private val db: CardRepository) : InventoryReposit
     }
     override suspend fun insertCardsList(cards: List<Card>): Resource<Int> =
         Resource.Success(db.insertCardsList(cards))
-    override suspend fun deleteCard(cardId: Int) = wrap { db.deleteCard(cardId) }
-    override suspend fun markCardAsUsed(cardId: Int) = wrap { db.markCardAsUsed(cardId) }
+    override suspend fun deleteCard(cardId: String) = wrap { db.deleteCard(cardId) }
+    override suspend fun markCardAsUsed(cardId: String) = wrap { db.markCardAsUsed(cardId) }
     override suspend fun getUnusedCardByCategory(category: Int): Card? = db.getUnusedCardByCategory(category)
+    override suspend fun claimUnusedCardByCategory(category: Int): Card? = db.claimUnusedCardByCategory(category)
     override suspend fun getUnusedCountByCategory(category: Int): Int = db.getUnusedCountByCategoryDirect(category)
     override suspend fun getTotalUnusedCount(): Int = 0 // TODO: add direct count to CardRepository
     override suspend fun getAllCards(): List<Card> = db.getAllCards().firstOrNull() ?: emptyList()

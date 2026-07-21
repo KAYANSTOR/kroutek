@@ -21,6 +21,8 @@ import com.example.models.DistributorCustomer
 import com.example.models.DistributorTransaction
 import com.example.models.DistributorExpense
 import com.example.models.DistributorCapital
+import com.example.sync.SyncOutboxDao
+import com.example.sync.SyncOutboxEntry
 
 @Dao
 interface CustomerMappingDao {
@@ -31,10 +33,10 @@ interface CustomerMappingDao {
     suspend fun getMappingByUniqueId(uniqueId: String): CustomerMapping?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMapping(mapping: CustomerMapping): Long
+    suspend fun insertMapping(mapping: CustomerMapping)
 
     @Query("DELETE FROM customer_mappings WHERE id = :id")
-    suspend fun deleteMapping(id: Int)
+    suspend fun deleteMapping(id: String)
 
     @Query("DELETE FROM customer_mappings")
     suspend fun deleteAllMappings()
@@ -46,7 +48,7 @@ interface CardDao {
     suspend fun getUnusedCardByCategory(category: Int): Card?
 
     @Query("UPDATE cards SET used = 1 WHERE id = :id")
-    suspend fun markCardAsUsed(id: Int)
+    suspend fun markCardAsUsed(id: String)
 
     // ⚠️ عملية ذرّية (Room @Transaction): تسحب كرتاً غير مستخدم وتعلّمه "مستخدم"
     // ضمن معاملة قاعدة بيانات واحدة غير قابلة للمقاطعة. تمنع هذا سيناريو
@@ -76,7 +78,7 @@ interface CardDao {
     fun getAllCards(): Flow<List<Card>>
 
     @Query("DELETE FROM cards WHERE id = :id")
-    suspend fun deleteCard(id: Int)
+    suspend fun deleteCard(id: String)
 
     @Query("DELETE FROM cards WHERE category = :category")
     suspend fun deleteCardsByCategory(category: Int)
@@ -103,16 +105,16 @@ interface PendingApprovalDao {
     fun getAllPendingApprovals(): Flow<List<PendingApproval>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPendingApproval(pending: PendingApproval): Long
+    suspend fun insertPendingApproval(pending: PendingApproval)
 
     @Query("SELECT * FROM pending_approvals WHERE id = :id")
-    suspend fun getPendingApprovalById(id: Int): PendingApproval?
+    suspend fun getPendingApprovalById(id: String): PendingApproval?
 
     @Query("UPDATE pending_approvals SET phone = :phone WHERE id = :id")
-    suspend fun updatePendingApprovalPhone(id: Int, phone: String)
+    suspend fun updatePendingApprovalPhone(id: String, phone: String)
 
     @Query("DELETE FROM pending_approvals WHERE id = :id")
-    suspend fun deletePendingApproval(id: Int)
+    suspend fun deletePendingApproval(id: String)
 
     @Query("DELETE FROM pending_approvals")
     suspend fun deleteAllPendingApprovals()
@@ -124,10 +126,10 @@ interface DepositDao {
     fun getAllDeposits(): Flow<List<Deposit>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertDeposit(deposit: Deposit): Long
+    suspend fun insertDeposit(deposit: Deposit)
 
     @Query("UPDATE deposits SET isShared = :isShared, cardDetails = :cardDetails WHERE id = :id")
-    suspend fun updateDepositSharing(id: Int, isShared: Boolean, cardDetails: String)
+    suspend fun updateDepositSharing(id: String, isShared: Boolean, cardDetails: String)
 
     @Query("DELETE FROM deposits")
     suspend fun deleteAllDeposits()
@@ -139,19 +141,19 @@ interface GeneratedMikrotikCardDao {
     fun getAllGeneratedCards(): Flow<List<GeneratedMikrotikCard>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGeneratedCard(card: GeneratedMikrotikCard): Long
+    suspend fun insertGeneratedCard(card: GeneratedMikrotikCard)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGeneratedCards(cards: List<GeneratedMikrotikCard>)
 
     @Query("UPDATE generated_mikrotik_cards SET printed = :printed WHERE id = :id")
-    suspend fun markAsPrinted(id: Int, printed: Boolean)
+    suspend fun markAsPrinted(id: String, printed: Boolean)
 
     @Query("UPDATE generated_mikrotik_cards SET transferred = 1 WHERE id = :id")
-    suspend fun markAsTransferred(id: Int)
+    suspend fun markAsTransferred(id: String)
 
     @Query("DELETE FROM generated_mikrotik_cards WHERE id = :id")
-    suspend fun deleteGeneratedCard(id: Int)
+    suspend fun deleteGeneratedCard(id: String)
 
     @Query("DELETE FROM generated_mikrotik_cards")
     suspend fun deleteAllGeneratedCards()
@@ -167,7 +169,7 @@ interface DistributorDao {
     suspend fun getCustomerById(id: String): DistributorCustomer?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCustomer(customer: DistributorCustomer): Long
+    suspend fun insertCustomer(customer: DistributorCustomer)
 
     @Query("DELETE FROM distributor_customers WHERE id = :id")
     suspend fun deleteCustomer(id: String)
@@ -186,7 +188,7 @@ interface DistributorDao {
     suspend fun getTransactionsByCustomerSync(customerId: String): List<DistributorTransaction>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTransaction(transaction: DistributorTransaction): Long
+    suspend fun insertTransaction(transaction: DistributorTransaction)
 
     @Query("DELETE FROM distributor_transactions WHERE id = :id")
     suspend fun deleteTransaction(id: String)
@@ -199,7 +201,7 @@ interface DistributorDao {
     fun getAllExpenses(): Flow<List<DistributorExpense>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExpense(expense: DistributorExpense): Long
+    suspend fun insertExpense(expense: DistributorExpense)
 
     @Query("DELETE FROM distributor_expenses WHERE id = :id")
     suspend fun deleteExpense(id: String)
@@ -209,7 +211,7 @@ interface DistributorDao {
     fun getAllCapitals(): Flow<List<DistributorCapital>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCapital(capital: DistributorCapital): Long
+    suspend fun insertCapital(capital: DistributorCapital)
 
     @Query("DELETE FROM distributor_capitals WHERE id = :id")
     suspend fun deleteCapital(id: String)
@@ -239,9 +241,10 @@ interface DistributorDao {
         DistributorCustomer::class,
         DistributorTransaction::class,
         DistributorExpense::class,
-        DistributorCapital::class
+        DistributorCapital::class,
+        SyncOutboxEntry::class
     ],
-    version = 7,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -252,6 +255,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun customerMappingDao(): CustomerMappingDao
     abstract fun generatedMikrotikCardDao(): GeneratedMikrotikCardDao
     abstract fun distributorDao(): DistributorDao
+    abstract fun syncOutboxDao(): SyncOutboxDao
 
     companion object {
         @Volatile
@@ -264,6 +268,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // هجرة 8→9: إضافة جدول طابور المزامنة (Outbox Queue)
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `sync_outbox` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `entityType` TEXT NOT NULL,
+                        `entityId` TEXT NOT NULL,
+                        `operation` TEXT NOT NULL,
+                        `payload` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        `retryCount` INTEGER NOT NULL DEFAULT 0,
+                        `lastAttemptAt` INTEGER,
+                        `lastError` TEXT
+                    )
+                """.trimIndent())
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_outbox_createdAt` ON `sync_outbox` (`createdAt`)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -271,7 +295,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "dahsha_database"
                 )
-                .addMigrations(MIGRATION_6_7)
+                .addMigrations(MIGRATION_6_7, MIGRATION_8_9)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

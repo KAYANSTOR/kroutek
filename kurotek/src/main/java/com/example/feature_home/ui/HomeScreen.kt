@@ -373,63 +373,7 @@ fun HomeScreen(
             }
         }
 
-        // 3. Distributor Mode Banner + Services Grid
-        item {
-            // بانر التبديل إلى وضع الموزع - واضح وبارز
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1A14)),
-                border = BorderStroke(1.5.dp, Color(0xFF10B981).copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        distributorViewModel.setDistributorModeActive(true)
-                        Toast.makeText(context, "🏪 جاري التبديل إلى نظام الموزع...", Toast.LENGTH_SHORT).show()
-                    }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // زر الانتقال
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF10B981), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                    ) {
-                        Text("انتقل ←", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-
-                    // وصف
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            "🏪 وضع الموزع",
-                            color = Color(0xFF10B981),
-                            fontWeight = FontWeight.Black,
-                            fontSize = 15.sp
-                        )
-                        Text(
-                            "حاسبة البيع • إدارة العملاء • التقارير المالية",
-                            color = Color(0xFF94A3B8),
-                            fontSize = 11.sp
-                        )
-                    }
-
-                    // أيقونة
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(Color(0xFF10B981).copy(alpha = 0.15f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Store, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(24.dp))
-                    }
-                }
-            }
-        }
+        // 3. (Distributor Banner Removed - Replaced by Global Top Toggle)
 
         // 3b. Services Grid (5 Buttons)
         item {

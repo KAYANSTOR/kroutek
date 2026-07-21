@@ -24,7 +24,7 @@ import com.example.database.CardRepository
 class CoreContainer private constructor(private val context: Context) {
 
     // ─── Local DB (Bridge مؤقت حتى اكتمال Room Migrations) ───────────
-    val cardRepository by lazy { CardRepository(context) }
+    val cardRepository by lazy { CardRepository.getInstance(context) }
 
     // ─── Core Engines ─────────────────────────────────────────────────
     val deviceEngine by lazy { DeviceEngine(context) }

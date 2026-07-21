@@ -51,8 +51,13 @@ object SecurityApiService {
     // In production, change this to your secure HTTPS VPS server address.
     private const val BASE_URL = "https://kayan-licensing-server.onrender.com/" 
     
-    // HMAC Secret Key shared between Backend and App for request integrity signature checking
-    private const val HMAC_SECRET = "KayanSoftSecurityHMACKey2026Master"
+    // HMAC Secret Key is now securely loaded via BuildConfig (from .env file)
+    private val HMAC_SECRET: String
+        get() = try {
+            com.example.BuildConfig.HMAC_SECRET.replace("\"", "")
+        } catch (e: Exception) {
+            ""
+        }
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())

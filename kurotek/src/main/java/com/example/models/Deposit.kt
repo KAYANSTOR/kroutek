@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "deposits")
 data class Deposit(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
     val phone: String,
     val amount: Int,
     val walletType: String,      // "جيب" or "جوالي"

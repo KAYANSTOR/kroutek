@@ -166,6 +166,28 @@ fun SettingsTab(
                         )
                     }
 
+                    // 1.5. Switch App PIN Lock
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Switch(
+                            checked = settingsViewModel.isAppPinEnabled.collectAsState().value,
+                            onCheckedChange = { settingsViewModel.setAppPinEnabled(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = if (isDarkTheme) DeepBlack else Color.White,
+                                checkedTrackColor = if (isDarkTheme) GlowPurplePink else Color(0xFF7B1FA2)
+                            )
+                        )
+                        Text(
+                            text = "تفعيل قفل التطبيق برمز PIN (الافتراضي 0000)",
+                            color = PureWhite,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
                     // 2. Switch share notification opens default edit composer
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -440,7 +462,7 @@ fun SettingsTab(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = "تسجيل خروج", modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "إلغاء التفعيل والاشتراك الحالي", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(text = "تسجيل الخروج من الجلسة (قفل التطبيق)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }

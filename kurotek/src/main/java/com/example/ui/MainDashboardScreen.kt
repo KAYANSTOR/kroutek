@@ -1,5 +1,6 @@
 package com.example.ui
 
+import com.example.ui.components.UnifiedBottomNavItem
 import com.example.feature_approvals.ui.PendingApprovalsTab
 import com.example.feature_customers.ui.SpecialCustomersTab
 import com.example.feature_settings.ui.SettingsTab
@@ -147,30 +148,93 @@ fun MainDashboardScreen(
         }
     }
 
-    // ✅ وضع الموزع: عرض مستقل تماًبدون الـ Scaffold العادي
-    if (isDistributorModeActive) {
-        DistributorSystemScreen(
-            viewModel = distributorViewModel,
-            initialTab = distributorInitialTab,
-            onBack = { distributorViewModel.setDistributorModeActive(false) }
-        )
-        return // Early return from composable is valid
-    }
-
-
-    if (currentSubScreen == "mikrotik") {
-        MikrotikGeneratorScreen(
-            viewModel = mikrotikViewModel,
-            onBack = { currentSubScreen = null }
-        )
-        return // Early return from composable is valid
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DeepBlack)
+    Column(
+        modifier = Modifier.fillMaxSize().background(DeepBlack)
     ) {
+        // Global Mode Switcher
+        Surface(
+            color = if (isDistributorModeActive) Color(0xFF0C1A14) else Color(0xFF151922),
+            shadowElevation = 8.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Premium Segmented Toggle (Sleek UI)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFF18181B)) // Zinc 900
+                        .border(1.dp, Color(0xFF27272A), RoundedCornerShape(24.dp)) // Zinc 800
+                        .padding(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Direct Sales Button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(if (!isDistributorModeActive) BrandPrimaryRed else Color.Transparent)
+                                .clickable { distributorViewModel.setDistributorModeActive(false) }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "بائع مباشر (SMS)", 
+                                color = if (!isDistributorModeActive) Color.White else TextSecondary,
+                                fontWeight = if (!isDistributorModeActive) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
+                        }
+                        
+                        // Distributor Button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(if (isDistributorModeActive) Color(0xFF10B981) else Color.Transparent) // Emerald
+                                .clickable { distributorViewModel.setDistributorModeActive(true) }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "موزع الجملة", 
+                                color = if (isDistributorModeActive) Color.White else TextSecondary,
+                                fontWeight = if (isDistributorModeActive) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Box(modifier = Modifier.weight(1f)) {
+            // ✅ وضع الموزع: عرض مستقل تماًبدون الـ Scaffold العادي
+            if (isDistributorModeActive) {
+                DistributorSystemScreen(
+                    viewModel = distributorViewModel,
+                    initialTab = distributorInitialTab,
+                    onBack = { distributorViewModel.setDistributorModeActive(false) }
+                )
+            }
+            else if (currentSubScreen == "mikrotik") {
+                MikrotikGeneratorScreen(
+                    viewModel = mikrotikViewModel,
+                    onBack = { currentSubScreen = null }
+                )
+            }
+            else {
         Scaffold(
             bottomBar = {
                 // Beautiful Custom Bottom Bar matching the screenshots (4 tabs + floating central button)
@@ -194,7 +258,7 @@ fun MainDashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Left-most Tab: الملف (Settings)
-                            BottomNavItem(
+                            UnifiedBottomNavItem(
                                 selected = selectedTab == 5,
                                 onClick = {
                                     isCenterMenuOpen = false
@@ -202,10 +266,11 @@ fun MainDashboardScreen(
                                 },
                                 icon = Icons.Outlined.Person,
                                 selectedIcon = Icons.Filled.Person,
-                                label = "الملف"
+                                label = "الملف",
+                                activeColor = BrandPrimaryRed
                             )
                             // Left-middle Tab: التقارير (Reports)
-                            BottomNavItem(
+                            UnifiedBottomNavItem(
                                 selected = selectedTab == 4,
                                 onClick = {
                                     isCenterMenuOpen = false
@@ -213,12 +278,13 @@ fun MainDashboardScreen(
                                 },
                                 icon = Icons.Outlined.FormatListBulleted,
                                 selectedIcon = Icons.Filled.FormatListBulleted,
-                                label = "التقارير"
+                                label = "التقارير",
+                                activeColor = BrandPrimaryRed
                             )
                             // Center Spacer
                             Box(modifier = Modifier.weight(1f).fillMaxHeight())
                             // Right-middle Tab: الخدمات (Services)
-                            BottomNavItem(
+                            UnifiedBottomNavItem(
                                 selected = selectedTab == 1,
                                 onClick = {
                                     isCenterMenuOpen = false
@@ -226,10 +292,11 @@ fun MainDashboardScreen(
                                 },
                                 icon = Icons.Outlined.ShoppingBag,
                                 selectedIcon = Icons.Filled.ShoppingBag,
-                                label = "الخدمات"
+                                label = "الخدمات",
+                                activeColor = BrandPrimaryRed
                             )
                             // Right-most Tab: الرئيسية (Home)
-                            BottomNavItem(
+                            UnifiedBottomNavItem(
                                 selected = selectedTab == 0,
                                 onClick = {
                                     isCenterMenuOpen = false
@@ -237,7 +304,8 @@ fun MainDashboardScreen(
                                 },
                                 icon = Icons.Outlined.Home,
                                 selectedIcon = Icons.Filled.Home,
-                                label = "الرئيسية"
+                                label = "الرئيسية",
+                                activeColor = BrandPrimaryRed
                             )
                         }
                     }
@@ -687,56 +755,7 @@ fun MainDashboardScreen(
     }
 }
 
-@Composable
-fun RowScope.BottomNavItem(
-    selected: Boolean,
-    onClick: () -> Unit,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    selectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String
-) {
-    Box(
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight()
-            .clickable(
-                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(44.dp)
-                    .height(26.dp)
-                    .background(
-                        color = if (selected) Color(0xFFDC2626).copy(alpha = 0.1f) else Color.Transparent,
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (selected) selectedIcon else icon,
-                    contentDescription = label,
-                    tint = if (selected) Color(0xFFDC2626) else Color(0xFF94A3B8),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = label,
-                fontSize = 10.sp,
-                fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
-                color = if (selected) Color(0xFFDC2626) else Color(0xFF94A3B8)
-            )
-        }
-    }
-}
+
 
 @Composable
 fun DashboardMetricItem(
