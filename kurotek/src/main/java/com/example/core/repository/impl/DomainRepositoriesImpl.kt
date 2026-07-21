@@ -72,7 +72,7 @@ class ReportsRepositoryImpl(private val db: CardRepository) : ReportsRepository 
     override suspend fun insertMapping(uniqueId: String, phone: String, name: String, walletType: String) =
         wrap { db.insertMapping(uniqueId, phone, name, walletType) }
 
-    override suspend fun deleteMapping(id: Int) = wrap { db.deleteMapping(id) }
+    override suspend fun deleteMapping(id: String) = wrap { db.deleteMapping(id) }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -108,13 +108,13 @@ class DashboardRepositoryImpl(private val db: CardRepository) : DashboardReposit
 // ─────────────────────────────────────────────────────────────────────
 class ApprovalsRepositoryImpl(private val db: CardRepository) : ApprovalsRepository {
     override suspend fun getAllPendingApprovals() = db.getAllPendingApprovals().firstOrNull() ?: emptyList()
-    override suspend fun getPendingApproval(id: Int) = db.getPendingApproval(id)
-    override suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: Int): Resource<Long> {
-        val id = db.insertPendingApproval(phone, amount, walletType, isAccountCode, depositId)
-        return Resource.Success(id)
+    override suspend fun getPendingApproval(id: String) = db.getPendingApproval(id)
+    override suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String): Resource<Unit> {
+        db.insertPendingApproval(phone, amount, walletType, isAccountCode, depositId)
+        return Resource.Success(Unit)
     }
-    override suspend fun deletePendingApproval(id: Int) = wrap { db.deletePendingApproval(id) }
-    override suspend fun updatePendingPhone(id: Int, newPhone: String) = wrap { db.updatePendingApprovalPhone(id, newPhone) }
+    override suspend fun deletePendingApproval(id: String) = wrap { db.deletePendingApproval(id) }
+    override suspend fun updatePendingPhone(id: String, newPhone: String) = wrap { db.updatePendingApprovalPhone(id, newPhone) }
     override fun observePendingApprovals(): Flow<List<PendingApproval>> = db.getAllPendingApprovals()
 }
 
@@ -125,10 +125,10 @@ class NetworkRepositoryImpl(private val db: CardRepository) : NetworkRepository 
     override suspend fun getAllGeneratedCards() = db.getAllGeneratedCards().firstOrNull() ?: emptyList()
     override suspend fun insertGeneratedCard(card: GeneratedMikrotikCard) = wrap { db.insertGeneratedCard(card) }
     override suspend fun insertGeneratedCards(cards: List<GeneratedMikrotikCard>) = wrap { db.insertGeneratedCards(cards) }
-    override suspend fun markCardAsPrinted(id: Int, printed: Boolean) = wrap { db.markGeneratedCardAsPrinted(id, printed) }
-    override suspend fun transferCardToAutoSales(id: Int, category: Int, pin: String, username: String, password: String) =
+    override suspend fun markCardAsPrinted(id: String, printed: Boolean) = wrap { db.markGeneratedCardAsPrinted(id, printed) }
+    override suspend fun transferCardToAutoSales(id: String, category: Int, pin: String, username: String, password: String) =
         wrap { db.transferGeneratedCardToAutoSales(id, category, pin, username, password) }
-    override suspend fun deleteGeneratedCard(id: Int) = wrap { db.deleteGeneratedCard(id) }
+    override suspend fun deleteGeneratedCard(id: String) = wrap { db.deleteGeneratedCard(id) }
     override suspend fun clearAllGeneratedCards() = wrap { db.clearAllGeneratedCards() }
     override fun observeGeneratedCards(): Flow<List<GeneratedMikrotikCard>> = db.getAllGeneratedCards()
 }

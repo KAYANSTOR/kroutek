@@ -54,7 +54,7 @@ class ReportsViewModel(private val coreContainer: CoreContainer) : ViewModel() {
         }
     }
 
-    fun deleteMapping(id: Int) {
+    fun deleteMapping(id: String) {
         viewModelScope.launch {
             reportsRepo.deleteMapping(id)
             loadMappings()

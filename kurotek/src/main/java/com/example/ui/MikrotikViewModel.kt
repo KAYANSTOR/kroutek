@@ -31,14 +31,14 @@ class MikrotikViewModel(private val coreContainer: CoreContainer) : ViewModel() 
     }
 
     fun transferGeneratedCardToAutoSales(
-        id: Int, category: Int, pin: String, username: String, password: String
+        id: String, category: Int, pin: String, username: String, password: String
     ) {
         viewModelScope.launch {
             networkRepo.transferCardToAutoSales(id, category, pin, username, password)
         }
     }
 
-    fun deleteGeneratedCard(id: Int) {
+    fun deleteGeneratedCard(id: String) {
         viewModelScope.launch { networkRepo.deleteGeneratedCard(id) }
     }
 }

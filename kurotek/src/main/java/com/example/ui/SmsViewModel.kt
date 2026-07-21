@@ -120,8 +120,8 @@ class SmsViewModel(
     fun addCardsList(cards: List<Card>, onComplete: (Int) -> Unit) {
         viewModelScope.launch { onComplete(repository.insertCardsList(cards)) }
     }
-    fun deleteCard(cardId: Int) { viewModelScope.launch { repository.deleteCard(cardId) } }
-    fun markCardAsUsed(cardId: Int) { viewModelScope.launch { repository.markCardAsUsed(cardId) } }
+    fun deleteCard(cardId: String) { viewModelScope.launch { repository.deleteCard(cardId) } }
+    fun markCardAsUsed(cardId: String) { viewModelScope.launch { repository.markCardAsUsed(cardId) } }
     fun clearAllCards() { viewModelScope.launch { repository.clearAllCards() } }
 
     // ─────────────────────────────────────────────
@@ -156,15 +156,15 @@ class SmsViewModel(
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: Int) {
+    fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String) {
         viewModelScope.launch { repository.insertPendingApproval(phone, amount, walletType, isAccountCode, depositId) }
     }
-    fun deletePendingApproval(id: Int) { viewModelScope.launch { repository.deletePendingApproval(id) } }
-    fun updatePendingApprovalPhone(pendingId: Int, newPhone: String) {
+    fun deletePendingApproval(id: String) { viewModelScope.launch { repository.deletePendingApproval(id) } }
+    fun updatePendingApprovalPhone(pendingId: String, newPhone: String) {
         viewModelScope.launch { repository.updatePendingApprovalPhone(pendingId, newPhone) }
     }
 
-    fun rejectPendingApproval(pendingId: Int) {
+    fun rejectPendingApproval(pendingId: String) {
         viewModelScope.launch {
             try {
                 val pending = repository.getPendingApproval(pendingId) ?: return@launch
@@ -175,7 +175,7 @@ class SmsViewModel(
     }
 
     fun approvePendingApproval(
-        pendingId: Int,
+        pendingId: String,
         onComplete: (success: Boolean, isSent: Boolean, replyMsg: String, phone: String) -> Unit = { _, _, _, _ -> }
     ) {
         viewModelScope.launch {
@@ -248,7 +248,7 @@ class SmsViewModel(
     fun insertMapping(customerUniqueId: String, basicPhone: String, customerName: String, walletType: String) {
         viewModelScope.launch { repository.insertMapping(customerUniqueId, basicPhone, customerName, walletType) }
     }
-    fun deleteMapping(id: Int) { viewModelScope.launch { repository.deleteMapping(id) } }
+    fun deleteMapping(id: String) { viewModelScope.launch { repository.deleteMapping(id) } }
 
     // ─────────────────────────────────────────────
     // كروت شبكة (Mikrotik)
@@ -262,13 +262,13 @@ class SmsViewModel(
     fun insertGeneratedCards(cards: List<GeneratedMikrotikCard>) {
         viewModelScope.launch { repository.insertGeneratedCards(cards) }
     }
-    fun markGeneratedCardAsPrinted(id: Int, printed: Boolean) {
+    fun markGeneratedCardAsPrinted(id: String, printed: Boolean) {
         viewModelScope.launch { repository.markGeneratedCardAsPrinted(id, printed) }
     }
-    fun transferGeneratedCardToAutoSales(id: Int, category: Int, pin: String, username: String, password: String) {
+    fun transferGeneratedCardToAutoSales(id: String, category: Int, pin: String, username: String, password: String) {
         viewModelScope.launch { repository.transferGeneratedCardToAutoSales(id, category, pin, username, password) }
     }
-    fun deleteGeneratedCard(id: Int) { viewModelScope.launch { repository.deleteGeneratedCard(id) } }
+    fun deleteGeneratedCard(id: String) { viewModelScope.launch { repository.deleteGeneratedCard(id) } }
     fun clearAllGeneratedCards() { viewModelScope.launch { repository.clearAllGeneratedCards() } }
 }
 

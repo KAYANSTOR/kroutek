@@ -8,11 +8,21 @@ import android.os.Build
 import android.telephony.SmsManager
 import android.util.Log
 import com.example.database.CardRepository
+import com.example.core.usecase.ProcessDepositUseCase
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class PendingApprovalReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var repository: CardRepository
+
+    @Inject
+    lateinit var processDepositUseCase: ProcessDepositUseCase
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
@@ -30,7 +40,7 @@ class PendingApprovalReceiver : BroadcastReceiver() {
         val goAsyncPending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val repository = CardRepository.getInstance(context)
+                // repository مُحقن عبر Hilt — لا حاجة لـ getInstance() هنا
                 val pending = repository.getPendingApproval(pendingId)
                 if (pending == null) {
                     goAsyncPending.finish()

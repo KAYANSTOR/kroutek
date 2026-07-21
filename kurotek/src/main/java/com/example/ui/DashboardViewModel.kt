@@ -38,7 +38,7 @@ class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel()
     // قبول الموافقة — يُفوَّض إلى ApprovePendingUseCase
     // ─────────────────────────────────────────────
 
-    fun approvePending(pendingId: Int, onResult: (success: Boolean, message: String) -> Unit) {
+    fun approvePending(pendingId: String, onResult: (success: Boolean, message: String) -> Unit) {
         viewModelScope.launch {
             val pending = approvalsRepo.getPendingApproval(pendingId)
             if (pending == null) {
@@ -71,7 +71,7 @@ class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel()
     // رفض الموافقة — يُسجَّل كمعاملة مرفوضة
     // ─────────────────────────────────────────────
 
-    fun rejectPending(pendingId: Int) {
+    fun rejectPending(pendingId: String) {
         viewModelScope.launch {
             val pending = approvalsRepo.getPendingApproval(pendingId) ?: return@launch
             coreContainer.salesRepository.insertTransaction(
@@ -88,7 +88,7 @@ class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel()
     // تحديث رقم هاتف الموافقة المعلقة
     // ─────────────────────────────────────────────
 
-    fun updatePendingApprovalPhone(pendingId: Int, newPhone: String) {
+    fun updatePendingApprovalPhone(pendingId: String, newPhone: String) {
         viewModelScope.launch {
             approvalsRepo.updatePendingPhone(pendingId, newPhone)
         }

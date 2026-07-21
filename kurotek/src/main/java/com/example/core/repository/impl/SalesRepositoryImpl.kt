@@ -17,9 +17,9 @@ class SalesRepositoryImpl(private val db: CardRepository) : SalesRepository {
 
     override suspend fun clearAllTransactions() = wrap { db.clearAllTransactions() }
 
-    override suspend fun insertDeposit(phone: String, amount: Int, walletType: String, isShared: Boolean, cardDetails: String): Resource<Long> {
-        val id = db.insertDeposit(phone, amount, walletType, isShared = isShared, cardDetails = cardDetails)
-        return Resource.Success(id)
+    override suspend fun insertDeposit(phone: String, amount: Int, walletType: String, isShared: Boolean, cardDetails: String): Resource<Unit> {
+        db.insertDeposit(phone, amount, walletType, isShared = isShared, cardDetails = cardDetails)
+        return Resource.Success(Unit)
     }
 
     override suspend fun getAllDeposits(): List<Deposit> =
@@ -27,7 +27,7 @@ class SalesRepositoryImpl(private val db: CardRepository) : SalesRepository {
 
     override suspend fun clearAllDeposits() = wrap { db.clearAllDeposits() }
 
-    override suspend fun updateDepositSharing(depositId: Int, isShared: Boolean, cardDetails: String) =
+    override suspend fun updateDepositSharing(depositId: String, isShared: Boolean, cardDetails: String) =
         wrap { db.updateDepositSharing(depositId, isShared = isShared, cardDetails = cardDetails) }
 
     override fun observeTransactions(): Flow<List<Transaction>> = db.getAllTransactions()

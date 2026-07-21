@@ -57,13 +57,13 @@ class InventoryViewModel(private val coreContainer: CoreContainer) : ViewModel()
         }
     }
 
-    fun deleteCard(cardId: Int) {
+    fun deleteCard(cardId: String) {
         viewModelScope.launch {
             coreContainer.deleteCardUseCase(cardId)
         }
     }
 
-    fun markCardAsUsed(cardId: Int) {
+    fun markCardAsUsed(cardId: String) {
         viewModelScope.launch {
             inventoryRepo.markCardAsUsed(cardId)
         }

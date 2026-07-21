@@ -64,6 +64,9 @@ class SettingsViewModel(
     fun getActiveGeminiApiKey(): String = repository.getActiveGeminiApiKey()
     fun updateCardFormatMode(mode: String) = repository.setCardFormatMode(mode)
 
+    val isAppPinEnabled: StateFlow<Boolean> = repository.isAppPinEnabled
+    fun setAppPinEnabled(enabled: Boolean) = repository.setAppPinEnabled(enabled)
+
     // ─────────────────────────────────────────────
     // إدارة الفئات (Categories)
     // ─────────────────────────────────────────────

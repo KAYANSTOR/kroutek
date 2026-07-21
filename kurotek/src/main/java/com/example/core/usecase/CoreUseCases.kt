@@ -34,7 +34,7 @@ class GetUnusedCardUseCase(private val inventoryRepository: InventoryRepository)
 }
 
 class DeleteCardUseCase(private val inventoryRepository: InventoryRepository) {
-    suspend operator fun invoke(cardId: Int) = inventoryRepository.deleteCard(cardId)
+    suspend operator fun invoke(cardId: String) = inventoryRepository.deleteCard(cardId)
 }
 
 // ══════════════════════════════════════════════════════════
@@ -55,10 +55,8 @@ class SellCardUseCase(
         if (!validateSmsAmountUseCase(amount)) {
             return Resource.Error(Exception("المبلغ $amount غير مدرج في قائمة المبالغ المسموحة"))
         }
-        val card = inventoryRepository.getUnusedCardByCategory(amount)
+        val card = inventoryRepository.claimUnusedCardByCategory(amount)
             ?: return Resource.Error(Exception("لا يوجد كروت متوفرة لهذه الفئة ($amount ر.ي)"))
-
-        inventoryRepository.markCardAsUsed(card.id)
 
         val cardDetails = if (card.password.isNotEmpty())
             "اسم المستخدم :\n${card.username}\nكلمة السر :\n${card.password}"
@@ -84,7 +82,7 @@ class ApprovePendingUseCase(
     private val sellCardUseCase: SellCardUseCase
 ) {
     suspend operator fun invoke(
-        pendingId: Int,
+        pendingId: String,
         onSmsSend: suspend (recipient: String, message: String) -> Boolean
     ): Resource<String> {
         val pending = approvalsRepository.getPendingApproval(pendingId)
@@ -113,7 +111,7 @@ class RejectPendingUseCase(
     private val approvalsRepository: com.example.core.repository.ApprovalsRepository,
     private val salesRepository: com.example.core.repository.SalesRepository
 ) {
-    suspend operator fun invoke(pendingId: Int): Resource<Unit> {
+    suspend operator fun invoke(pendingId: String): Resource<Unit> {
         val pending = approvalsRepository.getPendingApproval(pendingId)
             ?: return Resource.Error(Exception("الطلب غير موجود"))
         salesRepository.insertTransaction(
@@ -195,8 +193,7 @@ class DistributorSaleUseCase(
             // خصم الكروت
             quantities.forEach { (cat, qty) ->
                 if (qty > 0) repeat(qty) {
-                    inventoryRepository.getUnusedCardByCategory(cat)
-                        ?.let { inventoryRepository.markCardAsUsed(it.id) }
+                    inventoryRepository.claimUnusedCardByCategory(cat)
                 }
             }
 

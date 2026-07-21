@@ -170,7 +170,7 @@ fun CardsTab(
             }
         }
 
-        // Toggle Expandable Form to ADD Cards (Vibrant Emerald Green Gradient Action button)
+        // Toggle Expandable Form to ADD Cards (Premium Emerald Action)
         item {
             Button(
                 onClick = { 
@@ -179,13 +179,13 @@ fun CardsTab(
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
-                    contentColor = Color.White
+                    contentColor = PureWhite
                 ),
                 contentPadding = PaddingValues(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(56.dp)
                     .testTag("btn_toggle_add_panel")
             ) {
                 Box(
@@ -193,7 +193,7 @@ fun CardsTab(
                         .fillMaxSize()
                         .background(
                             if (showAddCardsSection) {
-                                Brush.horizontalGradient(listOf(Color(0xFF37474F), Color(0xFF263238)))
+                                SurfaceLight
                             } else {
                                 EmeraldGreenGradient
                             }
@@ -208,15 +208,15 @@ fun CardsTab(
                         Icon(
                             imageVector = if (showAddCardsSection) Icons.Outlined.Close else Icons.Outlined.Add,
                             contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            tint = if (showAddCardsSection) PureWhite else DeepBlack,
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (showAddCardsSection) "إغلاق لوحة الإضافة السريعة" else "إضافة كروت شحن جديدة للمخزن ➕",
+                            text = if (showAddCardsSection) "إغلاق لوحة الإضافة السريعة" else "إضافة كروت شحن جديدة للمخزن",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = Color.White
+                            fontSize = 14.sp,
+                            color = if (showAddCardsSection) PureWhite else DeepBlack
                         )
                     }
                 }

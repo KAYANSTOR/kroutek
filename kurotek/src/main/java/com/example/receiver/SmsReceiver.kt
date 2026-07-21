@@ -12,14 +12,25 @@ import android.telephony.SmsMessage
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.database.CardRepository
+import com.example.core.usecase.ProcessDepositUseCase
 import com.example.utils.SmsParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.network.SyncManager
+import dagger.hilt.android.AndroidEntryPoint
 import org.json.JSONObject
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var repository: CardRepository
+
+    @Inject
+    lateinit var processDepositUseCase: ProcessDepositUseCase
+
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != "android.provider.Telephony.SMS_RECEIVED") return
@@ -51,8 +62,6 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleMessage(context: Context, message: String) {
-        val repository = CardRepository.getInstance(context)
-        
         // Only proceed if the service is turned on in settings
         if (!repository.isServiceEnabled.value) {
             Log.d("SmsReceiver", "Service is disabled. SMS ignored.")
@@ -74,13 +83,12 @@ class SmsReceiver : BroadcastReceiver() {
                 Log.d("SmsReceiver", "Amount ${parsed.amount} is not in the allowed list (100, 200, 300, 500, 1000, 3000). SMS ignored.")
                 return
             }
-            sendCard(context, repository, parsed.amount, parsed.phone, parsed.walletType, parsed.isAccountCode)
+            sendCard(context, parsed.amount, parsed.phone, parsed.walletType, parsed.isAccountCode)
         }
     }
 
     private suspend fun sendCard(
         context: Context,
-        repository: CardRepository,
         amount: Int,
         identifier: String,
         walletType: String,

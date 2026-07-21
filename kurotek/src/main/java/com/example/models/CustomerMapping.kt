@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "customer_mappings")
 data class CustomerMapping(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
     val customerUniqueId: String,
     val basicPhone: String,
     val customerName: String = "",

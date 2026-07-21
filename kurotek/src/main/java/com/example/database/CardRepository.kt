@@ -2,6 +2,8 @@ package com.example.database
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.example.models.Card
 import com.example.models.Transaction
 import com.example.models.PendingApproval
@@ -21,7 +23,23 @@ class CardRepository(val context: Context) {
     private val customerMappingDao = database.customerMappingDao()
     private val generatedMikrotikCardDao = database.generatedMikrotikCardDao()
     private val distributorDao = database.distributorDao()
-    private val sharedPrefs: SharedPreferences = context.getSharedPreferences("dahsha_prefs", Context.MODE_PRIVATE)
+    
+    private val sharedPrefs: SharedPreferences = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+            
+        EncryptedSharedPreferences.create(
+            context,
+            "dahsha_secure_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Throwable) {
+        // Fallback for corrupted keystore or unsupported devices
+        context.getSharedPreferences("dahsha_prefs", Context.MODE_PRIVATE)
+    }
 
     companion object {
         private const val PREF_SERVICE_ENABLED = "service_enabled"
@@ -49,6 +67,7 @@ class CardRepository(val context: Context) {
         private const val PREF_PERMISSION_DISMISSED = "permission_dismissed"
         private const val PREF_INITIAL_LOGIN_DONE = "initial_login_done"
         private const val PREF_ACTIVE_SERIAL_KEY = "active_serial_key"
+        private const val PREF_PIN_ENABLED = "pin_enabled"
 
         @Volatile
         private var INSTANCE: CardRepository? = null
@@ -381,11 +400,19 @@ class CardRepository(val context: Context) {
 
     // App Pin/Password Lock
     fun getAppPassword(): String {
-        return sharedPrefs.getString(PREF_APP_PASSWORD, "PY_7MD") ?: "PY_7MD"
+        return sharedPrefs.getString(PREF_APP_PASSWORD, "0000") ?: "0000"
     }
 
     fun setAppPassword(password: String) {
         sharedPrefs.edit().putString(PREF_APP_PASSWORD, password).apply()
+    }
+
+    fun isAppPinEnabled(): Boolean {
+        return sharedPrefs.getBoolean(PREF_PIN_ENABLED, false)
+    }
+
+    fun setAppPinEnabled(enabled: Boolean) {
+        sharedPrefs.edit().putBoolean(PREF_PIN_ENABLED, enabled).apply()
     }
 
     // Cards Access
@@ -407,11 +434,11 @@ class CardRepository(val context: Context) {
         cardDao.claimUnusedCardByCategory(category)
     }
 
-    suspend fun markCardAsUsed(id: Int) = withContext(Dispatchers.IO) {
+    suspend fun markCardAsUsed(id: String) = withContext(Dispatchers.IO) {
         cardDao.markCardAsUsed(id)
     }
 
-    suspend fun deleteCard(id: Int) = withContext(Dispatchers.IO) {
+    suspend fun deleteCard(id: String) = withContext(Dispatchers.IO) {
         cardDao.deleteCard(id)
     }
 
@@ -525,7 +552,7 @@ class CardRepository(val context: Context) {
     // Pending Approvals Access
     fun getAllPendingApprovals(): Flow<List<PendingApproval>> = pendingApprovalDao.getAllPendingApprovals()
 
-    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: Int): Long = withContext(Dispatchers.IO) {
+    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String) = withContext(Dispatchers.IO) {
         val pending = PendingApproval(
             phone = phone,
             amount = amount,
@@ -536,15 +563,15 @@ class CardRepository(val context: Context) {
         pendingApprovalDao.insertPendingApproval(pending)
     }
 
-    suspend fun deletePendingApproval(id: Int) = withContext(Dispatchers.IO) {
+    suspend fun deletePendingApproval(id: String) = withContext(Dispatchers.IO) {
         pendingApprovalDao.deletePendingApproval(id)
     }
 
-    suspend fun updatePendingApprovalPhone(id: Int, phone: String) = withContext(Dispatchers.IO) {
+    suspend fun updatePendingApprovalPhone(id: String, phone: String) = withContext(Dispatchers.IO) {
         pendingApprovalDao.updatePendingApprovalPhone(id, phone)
     }
 
-    suspend fun getPendingApproval(id: Int): PendingApproval? = withContext(Dispatchers.IO) {
+    suspend fun getPendingApproval(id: String): PendingApproval? = withContext(Dispatchers.IO) {
         pendingApprovalDao.getPendingApprovalById(id)
     }
 
@@ -566,7 +593,7 @@ class CardRepository(val context: Context) {
         depositDao.insertDeposit(deposit)
     }
 
-    suspend fun updateDepositSharing(id: Int, isShared: Boolean, cardDetails: String) = withContext(Dispatchers.IO) {
+    suspend fun updateDepositSharing(id: String, isShared: Boolean, cardDetails: String) = withContext(Dispatchers.IO) {
         depositDao.updateDepositSharing(id, isShared, cardDetails)
     }
 
@@ -587,7 +614,7 @@ class CardRepository(val context: Context) {
         customerMappingDao.insertMapping(mapping)
     }
 
-    suspend fun deleteMapping(id: Int) = withContext(Dispatchers.IO) {
+    suspend fun deleteMapping(id: String) = withContext(Dispatchers.IO) {
         customerMappingDao.deleteMapping(id)
     }
 
@@ -608,11 +635,11 @@ class CardRepository(val context: Context) {
         generatedMikrotikCardDao.insertGeneratedCards(cards)
     }
 
-    suspend fun markGeneratedCardAsPrinted(id: Int, printed: Boolean) = withContext(Dispatchers.IO) {
+    suspend fun markGeneratedCardAsPrinted(id: String, printed: Boolean) = withContext(Dispatchers.IO) {
         generatedMikrotikCardDao.markAsPrinted(id, printed)
     }
 
-    suspend fun transferGeneratedCardToAutoSales(id: Int, category: Int, pin: String, username: String, password: String) = withContext(Dispatchers.IO) {
+    suspend fun transferGeneratedCardToAutoSales(id: String, category: Int, pin: String, username: String, password: String) = withContext(Dispatchers.IO) {
         // 1. Mark as transferred in generated list
         generatedMikrotikCardDao.markAsTransferred(id)
         // 2. Insert into automatic sales cards table
@@ -626,7 +653,7 @@ class CardRepository(val context: Context) {
         cardDao.insertCard(autoCard)
     }
 
-    suspend fun deleteGeneratedCard(id: Int) = withContext(Dispatchers.IO) {
+    suspend fun deleteGeneratedCard(id: String) = withContext(Dispatchers.IO) {
         generatedMikrotikCardDao.deleteGeneratedCard(id)
     }
 

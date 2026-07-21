@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.network.SyncService
-import com.example.security.FirebaseManager
 import com.example.ui.*
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.GoldPrimary
@@ -42,10 +41,10 @@ import com.example.ui.theme.PureWhite
 import dagger.hilt.android.AndroidEntryPoint
 
 enum class AppScreen {
-    LOGIN,
+    WELCOME,
+    ACTIVATION,
     MAIN,
-    ADD_CARDS,
-    LOGS
+    PIN_LOCK
 }
 
 @AndroidEntryPoint
@@ -100,17 +99,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val isActivated by authViewModel.isActivated.collectAsState()
-                var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) }
+                val isTrialActive by authViewModel.isTrialActive.collectAsState()
+                val isInitialLoginDone by authViewModel.isInitialLoginDone.collectAsState()
+                val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+                val isPinEnabled by remember { mutableStateOf(coreContainer.cardRepository.isAppPinEnabled()) }
 
-                // 🔥 Firebase: تسجيل الجهاز وفحص Kill Switch
-                val firebaseStatus by remember {
-                    FirebaseManager.observeKillSwitch(context)
-                }.collectAsState(initial = FirebaseManager.DeviceStatus.LOADING)
-
-                // تسجيل أو تحديث بيانات الجهاز في Firebase
-                LaunchedEffect(Unit) {
-                    FirebaseManager.registerOrUpdateDevice(context)
-                }
+                var currentScreen by remember { mutableStateOf(AppScreen.WELCOME) }
 
                 // Check and request run-time SMS & notification permissions
                 val requiredPermissions = remember {
@@ -140,14 +134,17 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Auto route from/to activation screen and request permissions
-                LaunchedEffect(isActivated, hasSmsPermissions) {
-                    if (isActivated) {
-                        currentScreen = AppScreen.MAIN
-                        if (!hasSmsPermissions) {
-                            permissionLauncher.launch(requiredPermissions)
+                LaunchedEffect(isActivated, isTrialActive, isInitialLoginDone, isLoggedIn, isPinEnabled, hasSmsPermissions) {
+                    currentScreen = when {
+                        isActivated || isTrialActive -> {
+                            if (isPinEnabled && !isLoggedIn) AppScreen.PIN_LOCK
+                            else if (!isInitialLoginDone) AppScreen.WELCOME
+                            else AppScreen.MAIN
                         }
-                    } else {
-                        currentScreen = AppScreen.LOGIN
+                        else -> AppScreen.ACTIVATION
+                    }
+                    if (currentScreen == AppScreen.MAIN && !hasSmsPermissions) {
+                        permissionLauncher.launch(requiredPermissions)
                     }
                 }
 
@@ -162,19 +159,24 @@ class MainActivity : ComponentActivity() {
                             .background(DeepBlack)
                             .padding(innerPadding)
                     ) {
-                        // 🔴 Kill Switch: إذا حظر الأدمن هذا الجهاز، تُعرض شاشة الحظر فوراً
-                        if (firebaseStatus == FirebaseManager.DeviceStatus.BLOCKED) {
-                            KurotekBlockedScreen()
-                            return@Box
-                        }
-
                         when (currentScreen) {
-                            AppScreen.LOGIN -> {
+                            AppScreen.WELCOME -> {
                                 LoginScreen(
                                     authViewModel = authViewModel,
                                     mainViewModel = mainViewModel,
                                     smsViewModel = settingsViewModel,
-                                    onLoginSuccess = { currentScreen = AppScreen.MAIN }
+                                    onLoginSuccess = {} // Routing is handled by LaunchedEffect
+                                )
+                            }
+                            AppScreen.ACTIVATION -> {
+                                ActivationScreen(
+                                    authViewModel = authViewModel
+                                )
+                            }
+                            AppScreen.PIN_LOCK -> {
+                                PinLockScreen(
+                                    authViewModel = authViewModel,
+                                    onUnlocked = { /* Logged in via VM */ }
                                 )
                             }
                             AppScreen.MAIN -> {
@@ -193,28 +195,8 @@ class MainActivity : ComponentActivity() {
                                     walletViewModel = walletViewModel,
                                     mikrotikViewModel = mikrotikViewModel,
                                     onLogout = {
-                                        authViewModel.setActivated(false, "")
+                                        authViewModel.logout() // خروج من الجلسة فقط، لا تمسح isActivated
                                         SyncService.stopService(context)
-                                        currentScreen = AppScreen.LOGIN
-                                    }
-                                )
-                            }
-                            else -> {
-                                // Fallback
-                                MainDashboardScreen(
-                                    mainViewModel = mainViewModel,
-                                    authViewModel = authViewModel,
-                                    settingsViewModel = settingsViewModel,
-                                    distributorViewModel = distributorViewModel,
-                                    dashboardViewModel = dashboardViewModel,
-                                    inventoryViewModel = inventoryViewModel,
-                                    salesViewModel = salesViewModel,
-                                    reportsViewModel = reportsViewModel,
-                                    walletViewModel = walletViewModel,
-                                    mikrotikViewModel = mikrotikViewModel,
-                                    onLogout = {
-                                        authViewModel.setActivated(false, "")
-                                        currentScreen = AppScreen.LOGIN
                                     }
                                 )
                             }

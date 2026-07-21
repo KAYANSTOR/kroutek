@@ -40,6 +40,7 @@ import com.example.models.DistributorTransaction
 import com.example.models.DistributorExpense
 import com.example.models.DistributorCapital
 import com.example.ui.theme.*
+import com.example.ui.components.UnifiedBottomNavItem
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -138,8 +139,8 @@ fun DistributorSystemScreen(
         containerColor = DeepBlack,
         topBar = {
             Surface(
-                color = Color(0xFF0F172A),
-                shadowElevation = 4.dp
+                color = SurfaceDark,
+                shadowElevation = 8.dp
             ) {
                 Row(
                     modifier = Modifier
@@ -152,8 +153,8 @@ fun DistributorSystemScreen(
                     // زر رجوع / تبديل
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF1E293B))
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(SurfaceLight)
                             .clickable { onBack() }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         contentAlignment = Alignment.Center
@@ -162,79 +163,52 @@ fun DistributorSystemScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(18.dp))
-                            Text("SMS", color = Color(0xFF10B981), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = GlowEmeraldGreen, modifier = Modifier.size(18.dp))
+                            Text("SMS", color = GlowEmeraldGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     // العنوان
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("🏪 نظام الموزع", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
-                        Text(tabItems.getOrNull(selectedTab)?.first ?: "", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                        Text("🏪 نظام الموزع", color = PureWhite, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                        Text(tabItems.getOrNull(selectedTab)?.first ?: "", color = TextSecondary, fontSize = 11.sp)
                     }
 
                     // أيقونة الوضع
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .background(Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+                            .background(GlowEmeraldGreen.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Store, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(22.dp))
+                        Icon(Icons.Default.Store, contentDescription = null, tint = GlowEmeraldGreen, modifier = Modifier.size(22.dp))
                     }
                 }
             }
         },
         bottomBar = {
             Surface(
-                color = Color(0xFF0F172A),
-                shadowElevation = 8.dp,
-                modifier = Modifier.navigationBarsPadding()
+                color = SurfaceDark,
+                shadowElevation = 16.dp,
+                modifier = Modifier.navigationBarsPadding(),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp),
+                        .height(72.dp)
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     tabItems.forEachIndexed { index, (label, filledIcon, outlinedIcon) ->
-                        val isSelected = selectedTab == index
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clickable { selectedTab = index },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(
-                                            if (isSelected) Color(0xFF10B981).copy(alpha = 0.15f) else Color.Transparent,
-                                            RoundedCornerShape(8.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isSelected) filledIcon else outlinedIcon,
-                                        contentDescription = label,
-                                        tint = if (isSelected) Color(0xFF10B981) else Color(0xFF64748B),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = label,
-                                    color = if (isSelected) Color(0xFF10B981) else Color(0xFF64748B),
-                                    fontSize = 9.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
+                        UnifiedBottomNavItem(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            icon = outlinedIcon,
+                            selectedIcon = filledIcon,
+                            label = label,
+                            activeColor = GlowEmeraldGreen
+                        )
                     }
                 }
             }
@@ -256,7 +230,7 @@ fun DistributorSystemScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(Color(0xFF0F172A))
+                                    .background(SurfaceDark)
                                     .padding(4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
@@ -266,7 +240,7 @@ fun DistributorSystemScreen(
                                             .weight(1f)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(
-                                                if (calcType == type) Color(0xFF10B981) else Color.Transparent
+                                                if (calcType == type) GlowEmeraldGreen else Color.Transparent
                                             )
                                             .clickable { calcType = type }
                                             .padding(vertical = 12.dp),
@@ -295,12 +269,12 @@ fun DistributorSystemScreen(
 
                                     Card(
                                         colors = CardDefaults.cardColors(
-                                            containerColor = if (hasQty) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFF0F172A)
+                                            containerColor = if (hasQty) GlowEmeraldGreen.copy(alpha = 0.1f) else SurfaceDark
                                         ),
                                         shape = RoundedCornerShape(14.dp),
                                         border = BorderStroke(
                                             1.dp,
-                                            if (hasQty) Color(0xFF10B981).copy(alpha = 0.4f) else Color.White.copy(alpha = 0.06f)
+                                            if (hasQty) GlowEmeraldGreen.copy(alpha = 0.4f) else TextSecondary.copy(alpha = 0.1f)
                                         )
                                     ) {
                                         Row(
@@ -318,10 +292,10 @@ fun DistributorSystemScreen(
                                                 ) {
                                                     Box(
                                                         modifier = Modifier
-                                                            .size(34.dp)
+                                                            .size(44.dp) // UX Rule: Min 44dp touch target
                                                             .background(
-                                                                if (qty > 0) Color(0xFFDC2626) else Color(0xFF1E293B),
-                                                                RoundedCornerShape(8.dp)
+                                                                if (qty > 0) BrandPrimaryRed else SurfaceLight,
+                                                                RoundedCornerShape(12.dp)
                                                             )
                                                             .clickable { if (qty > 0) quantities[cat] = qty - 1 },
                                                         contentAlignment = Alignment.Center
@@ -343,16 +317,17 @@ fun DistributorSystemScreen(
                                                         },
                                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                         textStyle = androidx.compose.ui.text.TextStyle(
-                                                            color = if (hasQty) Color(0xFF10B981) else Color.White,
+                                                            color = if (hasQty) GlowEmeraldGreen else PureWhite,
                                                             fontWeight = FontWeight.Black,
                                                             fontSize = 18.sp,
                                                             textAlign = TextAlign.Center
                                                         ),
                                                         modifier = Modifier
-                                                            .width(44.dp)
-                                                            .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
-                                                            .border(1.dp, if (hasQty) Color(0xFF10B981).copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
-                                                            .padding(vertical = 4.dp),
+                                                            .width(50.dp)
+                                                            .height(44.dp)
+                                                            .background(SurfaceDark, RoundedCornerShape(8.dp))
+                                                            .border(1.dp, if (hasQty) GlowEmeraldGreen.copy(alpha = 0.5f) else TextSecondary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                                            .padding(vertical = 8.dp),
                                                         decorationBox = { innerTextField ->
                                                             Box(contentAlignment = Alignment.Center) {
                                                                 if (qtyText.isEmpty()) {
@@ -365,8 +340,8 @@ fun DistributorSystemScreen(
 
                                                     Box(
                                                         modifier = Modifier
-                                                            .size(34.dp)
-                                                            .background(Color(0xFF10B981), RoundedCornerShape(8.dp))
+                                                            .size(44.dp) // UX Rule: Min 44dp touch target
+                                                            .background(GlowEmeraldGreen, RoundedCornerShape(12.dp))
                                                             .clickable { quantities[cat] = qty + 1 },
                                                         contentAlignment = Alignment.Center
                                                     ) {
@@ -377,7 +352,7 @@ fun DistributorSystemScreen(
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         "= ${subtotal.toInt()} ر.ي",
-                                                        color = Color(0xFF10B981),
+                                                        color = GlowEmeraldGreen,
                                                         fontSize = 11.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -388,13 +363,13 @@ fun DistributorSystemScreen(
                                             Column(horizontalAlignment = Alignment.End) {
                                                 Text(
                                                     "فئة $cat ر.ي",
-                                                    color = Color.White,
+                                                    color = PureWhite,
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 15.sp
                                                 )
                                                 Text(
                                                     "السعر: ${price.toInt()} ر.ي",
-                                                    color = Color(0xFF94A3B8),
+                                                    color = TextSecondary,
                                                     fontSize = 12.sp
                                                 )
                                             }

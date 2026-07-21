@@ -14,9 +14,10 @@ interface InventoryRepository {
     suspend fun insertCard(card: Card): Resource<Unit>
     suspend fun insertCardsBulk(category: Int, codesBlock: String): Resource<Int>
     suspend fun insertCardsList(cards: List<Card>): Resource<Int>
-    suspend fun deleteCard(cardId: Int): Resource<Unit>
-    suspend fun markCardAsUsed(cardId: Int): Resource<Unit>
+    suspend fun deleteCard(cardId: String): Resource<Unit>
+    suspend fun markCardAsUsed(cardId: String): Resource<Unit>
     suspend fun getUnusedCardByCategory(category: Int): Card?
+    suspend fun claimUnusedCardByCategory(category: Int): Card?
     suspend fun getUnusedCountByCategory(category: Int): Int
     suspend fun getTotalUnusedCount(): Int
     suspend fun getAllCards(): List<Card>
@@ -32,10 +33,10 @@ interface SalesRepository {
     suspend fun insertTransaction(phone: String, amount: Int, cardCode: String, walletType: String): Resource<Unit>
     suspend fun getAllTransactions(): List<Transaction>
     suspend fun clearAllTransactions(): Resource<Unit>
-    suspend fun insertDeposit(phone: String, amount: Int, walletType: String, isShared: Boolean, cardDetails: String): Resource<Long>
+    suspend fun insertDeposit(phone: String, amount: Int, walletType: String, isShared: Boolean, cardDetails: String): Resource<Unit>
     suspend fun getAllDeposits(): List<Deposit>
     suspend fun clearAllDeposits(): Resource<Unit>
-    suspend fun updateDepositSharing(depositId: Int, isShared: Boolean, cardDetails: String): Resource<Unit>
+    suspend fun updateDepositSharing(depositId: String, isShared: Boolean, cardDetails: String): Resource<Unit>
     fun observeTransactions(): kotlinx.coroutines.flow.Flow<List<Transaction>>
     fun observeDeposits(): kotlinx.coroutines.flow.Flow<List<Deposit>>
 }
@@ -75,7 +76,7 @@ interface ReportsRepository {
     suspend fun getDepositsByDateRange(from: Long, to: Long): List<Deposit>
     suspend fun getMappings(): List<CustomerMapping>
     suspend fun insertMapping(uniqueId: String, phone: String, name: String, walletType: String): Resource<Unit>
-    suspend fun deleteMapping(id: Int): Resource<Unit>
+    suspend fun deleteMapping(id: String): Resource<Unit>
 }
 
 /**
@@ -94,10 +95,10 @@ interface DashboardRepository {
  */
 interface ApprovalsRepository {
     suspend fun getAllPendingApprovals(): List<PendingApproval>
-    suspend fun getPendingApproval(id: Int): PendingApproval?
-    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: Int): Resource<Long>
-    suspend fun deletePendingApproval(id: Int): Resource<Unit>
-    suspend fun updatePendingPhone(id: Int, newPhone: String): Resource<Unit>
+    suspend fun getPendingApproval(id: String): PendingApproval?
+    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String): Resource<Unit>
+    suspend fun deletePendingApproval(id: String): Resource<Unit>
+    suspend fun updatePendingPhone(id: String, newPhone: String): Resource<Unit>
     fun observePendingApprovals(): kotlinx.coroutines.flow.Flow<List<PendingApproval>>
 }
 
@@ -108,9 +109,9 @@ interface NetworkRepository {
     suspend fun getAllGeneratedCards(): List<com.example.models.GeneratedMikrotikCard>
     suspend fun insertGeneratedCard(card: com.example.models.GeneratedMikrotikCard): Resource<Unit>
     suspend fun insertGeneratedCards(cards: List<com.example.models.GeneratedMikrotikCard>): Resource<Unit>
-    suspend fun markCardAsPrinted(id: Int, printed: Boolean): Resource<Unit>
-    suspend fun transferCardToAutoSales(id: Int, category: Int, pin: String, username: String, password: String): Resource<Unit>
-    suspend fun deleteGeneratedCard(id: Int): Resource<Unit>
+    suspend fun markCardAsPrinted(id: String, printed: Boolean): Resource<Unit>
+    suspend fun transferCardToAutoSales(id: String, category: Int, pin: String, username: String, password: String): Resource<Unit>
+    suspend fun deleteGeneratedCard(id: String): Resource<Unit>
     suspend fun clearAllGeneratedCards(): Resource<Unit>
     fun observeGeneratedCards(): kotlinx.coroutines.flow.Flow<List<com.example.models.GeneratedMikrotikCard>>
 }
