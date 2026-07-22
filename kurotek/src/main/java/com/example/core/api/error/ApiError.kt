@@ -2,7 +2,7 @@ package com.example.core.api.error
 
 /**
  * ApiError
- * يحدد الأخطاء الشائعة القادمة من الـ API (Go Backend).
+ * يحدد الأخطاء الشائعة القادمة من الـ API (خادم Kurotek TypeScript/Node.js، ليس Go — انظر ADR-004 المُحدَّث).
  * يتم تحويل الـ HTTP Codes و Body Errors إلى هذه الكائنات.
  */
 sealed class ApiError(message: String) : Exception(message) {
