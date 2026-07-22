@@ -117,6 +117,15 @@ class AuthViewModel(
     // ─────────────────────────────────────────────
     // [UseCase] تفعيل الترخيص
     // ─────────────────────────────────────────────
+    // ⚠️ لا يوجد مسار احتياطي دون اتصال بعد الآن — قرار أمني صريح ومكرَّر
+    // من صاحب المشروع (نفس القرار المطبَّق سابقاً في SecurityApiService.kt
+    // ضمن هذه الجلسة). كانت كتلة "Offline Fallback" التي أُزيلت هنا تعتمد
+    // على deterministicHash: هاش SHA-256 من (المعرّف + Salt ثابت مكشوف
+    // في الكود "KayanSoftSecureSalt2026") — أي شخص يفكّ الـ APK يستخرج نفس
+    // الخوارزمية ويولّد سيريالات "صالحة" محلياً بلا شراء وبلا اتصال بالسيرفر
+    // إطلاقاً. كانت دوال التوليد المرتبطة (generateNewSerial،
+    // generateDeterministicSerial، addCustomSerial) غير مستخدَمة في أي
+    // شاشة أصلاً (تحقّقت بالبحث في كامل المشروع) فأُزيلت معها كاملة.
     fun activateLicense(serialKey: String, onResult: (success: Boolean, message: String) -> Unit) {
         viewModelScope.launch {
             _licenseLoading.value = true
@@ -129,38 +138,12 @@ class AuthViewModel(
                 }
                 is Resource.Error -> {
                     _licenseError.value = result.message
-                    // Fallback: تحقق من السيريال محلياً
-                    if (isValidSerialLocally(serialKey)) {
-                        repository.setActivated(true, serialKey)
-                        onResult(true, "✅ تم التفعيل محلياً (وضع Offline)")
-                    } else {
-                        onResult(false, "❌ ${result.message}")
-                    }
+                    onResult(false, "❌ ${result.message}")
                 }
                 is Resource.Loading -> {}
             }
             _licenseLoading.value = false
         }
-    }
-
-    // ─────────────────────────────────────────────
-    // سيريالات محلية (للـ Offline Fallback)
-    // ─────────────────────────────────────────────
-    fun generateNewSerial(): String {
-        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        val random = (1..6).map { chars.random() }.joinToString("")
-        val serial = "DAHSHA_$random"
-        repository.addGeneratedSerial(serial)
-        return serial
-    }
-
-    fun generateDeterministicSerial(identifier: String): String {
-        val trimmed = identifier.trim().uppercase()
-        return "$trimmed-KS${deterministicHash(trimmed)}"
-    }
-
-    fun addCustomSerial(serial: String) {
-        if (serial.trim().isNotEmpty()) repository.addGeneratedSerial(serial.trim())
     }
 
     fun deleteSerial(serial: String) = repository.removeGeneratedSerial(serial)
@@ -170,29 +153,6 @@ class AuthViewModel(
     fun setPermissionDismissed(dismissed: Boolean) = repository.setPermissionDismissed(dismissed)
     fun forceExpireTrial() = repository.forceExpireTrial()
     fun refreshTrialStatus() = repository.refreshTrialStatus()
-
-    private fun isValidSerialLocally(serial: String): Boolean {
-        val trimmed = serial.trim().uppercase()
-        if (repository.isSerialValid(trimmed)) return true
-        if (trimmed.contains("-KS")) {
-            val parts = trimmed.split("-KS")
-            if (parts.size == 2) {
-                val id = parts[0].trim()
-                val hash = parts[1].trim()
-                if (id.isNotEmpty() && hash.length >= 4) return hash == deterministicHash(id)
-            }
-        }
-        return false
-    }
-
-    private fun deterministicHash(identifier: String): String {
-        val raw = identifier + "KayanSoftSecureSalt2026"
-        return try {
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
-            val hash = digest.digest(raw.toByteArray(Charsets.UTF_8))
-            hash.joinToString("") { String.format("%02X", it) }.take(6)
-        } catch (e: Exception) { "ERROR" }
-    }
 }
 
 class AuthViewModelFactory(

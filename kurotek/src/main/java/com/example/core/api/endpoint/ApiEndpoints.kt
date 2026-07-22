@@ -10,7 +10,11 @@ import retrofit2.http.Path
 /**
  * ApiEndpoints
  * واجهة الـ API الأساسية التي سيتم 구현ها باستخدام Retrofit
- * جميع المسارات (Endpoints) يجب أن تتطابق مع الـ Go Backend
+ * جميع المسارات (Endpoints) يجب أن تتطابق مع خادم Kurotek TypeScript/Node.js
+ * الفعلي في server/src/ (وليس Go — انظر ADR-004 المُحدَّث في
+ * ARCHITECTURE_DECISIONS.md). ⚠️ المسارات أدناه لا تطابق مسارات الخادم
+ * الفعلية حالياً (توحيدها هو الخطوة التالية الصريحة المتفَق عليها؛ لا تُعِد
+ * كتابة هذا الملف قبل تلك المهمة المخصَّصة لها).
  */
 interface ApiEndpoints {
 
