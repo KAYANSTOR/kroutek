@@ -1,447 +1,309 @@
 package com.example.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.Store
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.BrandBackground
+import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.BrandSurface
+import com.example.ui.theme.BrandSurfaceVariant
+import com.example.ui.theme.TextSecondary
+import androidx.compose.ui.platform.testTag
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun POSReportsScreen(
     onBackClick: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    val isLight = BrandBackground.luminance() > 0.5f
+    val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    val selectedTab = remember { mutableIntStateOf(0) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A1A))
+            .background(BrandBackground)
             .testTag("pos_reports_screen")
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF222222))
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopAppBar(
+                title = {
                     Text(
                         text = "تقارير نقاط البيع",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        color = titleColor,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Right
                     )
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
+                },
+                navigationIcon = {
+                    TextButton(onClick = onBackClick) {
+                        Text(text = "إغلاق", color = TextSecondary, fontSize = 14.sp)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BrandBackground,
+                    titleContentColor = titleColor
+                )
+            )
 
-            // Tabs
-            TabRow(
-                selectedTabIndex = selectedTab,
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = Color(0xFF222222),
-                divider = {}
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = {
-                        Text(
-                            text = "اليوم",
-                            color = if (selectedTab == 0) Color(0xFF1A9B8E) else Color(0xFF808080),
-                            fontSize = 13.sp,
-                            fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    unselectedContentColor = Color(0xFF808080)
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = {
-                        Text(
-                            text = "هذا الأسبوع",
-                            color = if (selectedTab == 1) Color(0xFF1A9B8E) else Color(0xFF808080),
-                            fontSize = 13.sp,
-                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    unselectedContentColor = Color(0xFF808080)
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = {
-                        Text(
-                            text = "هذا الشهر",
-                            color = if (selectedTab == 2) Color(0xFF1A9B8E) else Color(0xFF808080),
-                            fontSize = 13.sp,
-                            fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    unselectedContentColor = Color(0xFF808080)
-                )
-            }
-
-            // Content
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(bottom = 80.dp)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                when (selectedTab) {
-                    0 -> TodayReportsContent()
-                    1 -> WeeklyReportsContent()
-                    2 -> MonthlyReportsContent()
-                }
-            }
-        }
-
-        // Bottom Navigation
-        POSReportsBottomNav(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
-    }
-}
-
-@Composable
-private fun TodayReportsContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Summary Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF1A9B8E),
-                                Color(0xFFE85E97),
-                                Color(0xFFC2185B)
-                            )
-                        ),
-                        RoundedCornerShape(16.dp)
-                    )
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
+                TabRow(
+                    selectedTabIndex = selectedTab.intValue,
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = BrandBackground,
+                    divider = {}
                 ) {
-                    Text(
-                        text = "إجمالي مبيعات اليوم",
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = "0 ريال",
-                        color = Color.White,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        content = {
-                            Text(
-                                text = "0 عملية",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 11.sp
+                    listOf("اليوم", "هذا الأسبوع", "هذا الشهر").forEachIndexed { index, label ->
+                        Tab(
+                            selected = selectedTab.intValue == index,
+                            onClick = { selectedTab.intValue = index },
+                            text = {
+                                Text(
+                                    text = label,
+                                    color = if (selectedTab.intValue == index) BrandPrimary else TextSecondary,
+                                    fontSize = 14.sp,
+                                    fontWeight = if (selectedTab.intValue == index) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            unselectedContentColor = TextSecondary
+                        )
+                    }
+                }
+
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.DateRange,
+                                contentDescription = null,
+                                tint = BrandPrimary
                             )
                             Text(
-                                text = "0 نقطة",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 11.sp
+                                text = when (selectedTab.intValue) {
+                                    0 -> "تقرير اليوم"
+                                    1 -> "تقرير الأسبوع"
+                                    else -> "تقرير الشهر"
+                                },
+                                color = titleColor,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
-                    )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .background(
+                                    color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E),
+                                    shape = RoundedCornerShape(16.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                StatItemInk(
+                                    label = "إجمالي المبيعات",
+                                    value = "0",
+                                    unit = "ريال",
+                                    color = BrandPrimary
+                                )
+                                StatItemInk(
+                                    label = "العمولة المكتسبة",
+                                    value = "0",
+                                    unit = "ريال",
+                                    color = Color(0xFFBB86FC)
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        }
 
-        // Transactions List
-        Text(
-            text = "آخر العمليات",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        repeat(3) {
-            TransactionItem(
-                date = "26 أكتوبر 2021",
-                time = "10:${30 + it}",
-                amount = "0 ريال",
-                type = "بيع",
-                status = "نجح"
-            )
-        }
-    }
-}
-
-@Composable
-private fun WeeklyReportsContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "إحصائيات الأسبوع",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        repeat(4) { day ->
-            DayStatItem(
-                day = when (day) {
-                    0 -> "الأحد"
-                    1 -> "الإثنين"
-                    2 -> "الثلاثاء"
-                    else -> "الأربعاء"
-                },
-                amount = "0 ريال",
-                transactions = "0"
-            )
-        }
-    }
-}
-
-@Composable
-private fun MonthlyReportsContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "إحصائيات الشهر",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        repeat(4) { week ->
-            WeekStatItem(
-                week = "الأسبوع ${week + 1}",
-                amount = "0 ريال",
-                percentage = when (week) {
-                    0 -> 20f
-                    1 -> 50f
-                    2 -> 75f
-                    else -> 45f
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun TransactionItem(
-    date: String,
-    time: String,
-    amount: String,
-    type: String,
-    status: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-        border = BorderStroke(1.dp, Color(0xFF333333)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = date,
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
+                    StatSummaryPill(
+                        title = "إجمالي المسدد",
+                        value = "0",
+                        unit = "ريال",
+                        color = Color(0xFF10B981),
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
                     )
-                    Text(
-                        text = time,
-                        color = Color(0xFF808080),
-                        fontSize = 11.sp
+                    StatSummaryPill(
+                        title = "المستحق الصافي",
+                        value = "0",
+                        unit = "ريال",
+                        color = Color(0xFFF59E0B),
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
                     )
                 }
-                Text(
-                    text = type,
-                    color = Color(0xFF1A9B8E),
-                    fontSize = 11.sp
-                )
-            }
-            
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = amount,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Badge(
-                    text = status,
-                    backgroundColor = Color(0xFF1A9B8E)
-                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "حسابات نقاط البيع",
+                        color = titleColor,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "كيان تك",
+                                        color = titleColor,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "773303455 — نقطة بيع",
+                                        color = TextSecondary,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Outlined.Store,
+                                    contentDescription = null,
+                                    tint = BrandPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                MiniStat(text = "المبيعات", value = "0", isLight = isLight, modifier = Modifier.weight(1f))
+                                MiniStat(text = "المسدد", value = "0", isLight = isLight, modifier = Modifier.weight(1f))
+                                MiniStat(text = "المتبقي", value = "0", isLight = isLight, modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun DayStatItem(
-    day: String,
-    amount: String,
-    transactions: String
+private fun StatSummaryPill(
+    title: String,
+    value: String,
+    unit: String,
+    color: Color,
+    isLight: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-        border = BorderStroke(1.dp, Color(0xFF333333)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = day,
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f)
-            )
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = amount,
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "$transactions عملية",
-                    color = Color(0xFF808080),
-                    fontSize = 11.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun WeekStatItem(
-    week: String,
-    amount: String,
-    percentage: Float
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-        border = BorderStroke(1.dp, Color(0xFF333333)),
-        shape = RoundedCornerShape(12.dp)
+    val containerColor = if (isLight) BrandSurface else BrandSurfaceVariant
+    ElevatedCard(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = containerColor)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = week,
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = amount,
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            LinearProgressIndicator(
-                progress = { percentage / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp),
-                color = Color(0xFF1A9B8E),
-                trackColor = Color(0xFF333333),
-                shape = RoundedCornerShape(3.dp)
-            )
-            
             Text(
-                text = "${percentage.toInt()}% من إجمالي الشهر",
-                color = Color(0xFF808080),
+                text = title,
+                color = TextSecondary,
+                fontSize = 12.sp
+            )
+            Text(
+                text = value,
+                color = color,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Text(
+                text = unit,
+                color = TextSecondary,
                 fontSize = 11.sp
             )
         }
@@ -449,82 +311,31 @@ private fun WeekStatItem(
 }
 
 @Composable
-private fun Badge(
-    text: String,
-    backgroundColor: Color
-) {
-    Card(
-        modifier = Modifier.height(20.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor.copy(alpha = 0.2f)),
-        border = BorderStroke(1.dp, backgroundColor.copy(alpha = 0.4f)),
-        shape = RoundedCornerShape(6.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = backgroundColor,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun POSReportsBottomNav(
-    modifier: Modifier = Modifier
-) {
-    Card(
+private fun MiniStat(text: String, value: String, isLight: Boolean, modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)),
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        border = BorderStroke(1.dp, Color(0xFF333333))
+            .background(
+                color = if (isLight) Color(0xFFF5F5F5) else Color(0xFF1E1E21),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavItem("الكروت", Icons.Outlined.CreditCard)
-            NavItem("الحسابات", Icons.Outlined.AccountBox)
-            NavItem("العروض", Icons.Outlined.LocalOffer)
-            NavItem("التقارير", Icons.Outlined.Assessment, isSelected = true)
-            NavItem("الرئيسية", Icons.Outlined.Home)
-        }
+        Text(text = text, color = TextSecondary, fontSize = 11.sp)
+        Text(text = value, color = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF), fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun NavItem(
-    label: String,
-    icon: androidx.compose.material.icons.materialIcon,
-    isSelected: Boolean = false
-) {
+private fun StatItemInk(label: String, value: String, unit: String, color: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(horizontal = 12.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = label,
-            color = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
+        Text(text = label, color = TextSecondary, fontSize = 12.sp)
+        Text(text = value, color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text(text = unit, color = TextSecondary, fontSize = 11.sp)
     }
 }
