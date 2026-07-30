@@ -13,34 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowForwardIos
-import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Store
-import androidx.compose.material.icons.outlined.Warehouse
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -134,7 +106,8 @@ fun HelpCenterScreen(
                     "مزايا الاشتراك الشهري",
                     "نقاط البيع والعمليات"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "هذا التطبيق هو نظام ذكي لأتمتة مبيعات كروت الإنترنت عبر قراءة رسائل SMS من محافظ الدفع اليمنية، مع واجهة سهلة الاستخدام، تفعيل عبر ترخيص مرتبط بالجهاز، ونسخة تجريبية مجانية لمدة 7 أيام."
             )
             HelpSection(
                 title = "مفهوم النظام وأهدافه",
@@ -145,7 +118,8 @@ fun HelpCenterScreen(
                     "حماية التراخيص",
                     "خدمة العملاء"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "نظام Z Net يهدف إلى تبسيط عملية بيع كروت الإنترنت وإدارة المحافظ الإلكترونية من خلال واجهة موحدة، مع التركيز على الثبات، حماية التراخيص، ودعم العملاء."
             )
             HelpSection(
                 title = "دورة العمل الكاملة",
@@ -156,7 +130,8 @@ fun HelpCenterScreen(
                     "نظام الأقساط والمتابعة",
                     "التقارير اليومية"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "تبدأ العملية عند استلام رسالة إيداع من العميل عبر SMS، ويقوم النظام بتحليل الرسالة، خصم الكرت تلقائياً، وإرسال رد للعميل، مع تسجيل العملية وتقارير يومية تلقائية."
             )
             HelpSection(
                 title = "تهيئة التطبيق والترخيص",
@@ -167,7 +142,8 @@ fun HelpCenterScreen(
                     "فترة السماح والتعطيل التلقائي",
                     "عملية التفعيل خطوة بخطوة"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "يتطلب التطبيق تفعيلاً أولياً عبر إدخال مفتاح الترخيص أو تفعيل نسخة تجريبية مجانية. الترخيص مرتبط بالجهاز، ويتيح لك الاستفادة من اشتراكات شهرية مع إمكانية التجربة المجانية لمدة 7 أيام."
             )
             HelpSection(
                 title = "إدارة العملاء والمشتركين",
@@ -178,7 +154,8 @@ fun HelpCenterScreen(
                     "قائمة العملاء المحظورين",
                     "المستحقات والرصيد"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "يمكنك إدارة بيانات العملاء، تعدد المعرفات لكل مشترك، توحيد السجلات، وتتبع المستحقات المالية والرصيد بسهولة من خلال واجهة موحدة."
             )
             HelpSection(
                 title = "فئات الخروج ومستودع المخزون",
@@ -189,7 +166,8 @@ fun HelpCenterScreen(
                     "منع البيع المرجوع والحجز الدائم",
                     "مستويات الكروت والكميات"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "يتيح لك هذا القسم إعداد فئات الكروت المالية، ضبط العمولة، استيراد مخزون جديد بشكل جماعي، منع البيع المرجوع والحجز الدائم، ومتابعة مستويات الكروت والكميات المتوفرة بدقة."
             )
             HelpSection(
                 title = "نقاط البيع والتسويات والتحصيل",
@@ -200,7 +178,8 @@ fun HelpCenterScreen(
                     "تصدير وبيع كشف الحساب",
                     "إغلاق الحسابات وتصفية المبالغ"
                 ),
-                isLight = isLight
+                isLight = isLight,
+                description = "تُدار نقاط البيع بشكل كامل من خلال إدارة الحسابات، تسجيل التسويات المالية، تصدير وبيع كشوفات الحساب، وإغلاق الحسابات مع تصفية المبالغ المتبقية بسهولة."
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -233,7 +212,8 @@ private fun HelpSection(
     title: String,
     icon: androidx.compose.material.icons.Icons.Outlined,
     items: List<String>,
-    isLight: Boolean
+    isLight: Boolean,
+    description: String = ""
 ) {
     var expanded by remember { mutableStateOf(false) }
     val containerColor = if (isLight) BrandSurface else BrandSurfaceVariant
@@ -279,19 +259,17 @@ private fun HelpSection(
                     )
 
                     Icon(
-                        imageVector = if (expanded) Icons.Outlined.ArrowForwardIos else Icons.Outlined.ArrowForwardIos,
+                        imageVector = Icons.Outlined.ArrowForwardIos,
                         contentDescription = null,
                         tint = TextSecondary,
                         modifier = Modifier
                             .size(18.dp)
                             .then(
-                                if (expanded) Modifier then Modifier else Modifier
-                            )
-                            .then(
-                                Modifier then
+                                Modifier.then(
                                     androidx.compose.ui.draw.rotate(
                                         if (expanded) 90f else 0f
                                     )
+                                )
                             )
                     )
                 }
@@ -307,6 +285,15 @@ private fun HelpSection(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        if (description.isNotBlank()) {
+                            Text(
+                                text = description,
+                                color = if (isLight) Color(0xFF444444) else TextSecondary,
+                                fontSize = 13.sp,
+                                lineHeight = 18.sp
+                            )
+                        }
+
                         items.forEachIndexed { index, item ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
