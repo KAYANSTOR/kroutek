@@ -168,7 +168,7 @@ class MainActivity : ComponentActivity() {
                                 LoginScreen(
                                     authViewModel = authViewModel,
                                     mainViewModel = mainViewModel,
-                                    smsViewModel = settingsViewModel,
+                                    smsViewModel = smsViewModel,
                                     onLoginSuccess = {} // Routing is handled by LaunchedEffect
                                 )
                             }
@@ -248,7 +248,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                         
                                         Text(
-                                            .كذن ذلك تطبيق كروت الدحشة من قراءة وتصفية رسائل الإشعارات الواردة وتحديداً من محفظة 'جيب' ومحفظة 'جوالي' وتوزيع كروت الشحن تلقائياً لعملائك، يتطلب منح الهاتف صلاحية قراءة واستقبال وإرسال رسائل SMS.",
+                                            text = "لكي يعمل تطبيق كروت الدحشة بشكل صحيح، يحتاج إلى صلاحية قراءة واستقبال وإرسال رسائل SMS. حيث يقوم بقراءة إشعارات المحافظ (جيب، جوالي) وتوزيع كروت الشحن تلقائياً لعملائك.",
                                             fontSize = 14.sp,
                                             color = PureWhite,
                                             lineHeight = 20.sp,
