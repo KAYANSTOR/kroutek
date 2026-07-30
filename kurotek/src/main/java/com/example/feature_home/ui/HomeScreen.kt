@@ -1,267 +1,358 @@
 package com.example.feature_home.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Store
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.DeepBlack
+import com.example.ui.theme.BrandBackground
+import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.BrandSecondary
+import com.example.ui.theme.BrandSurface
+import com.example.ui.theme.BrandSurfaceVariant
+import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.isDarkThemeState
+import androidx.compose.ui.platform.testTag
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToCards: () -> Unit = {},
     onNavigateToAccounts: () -> Unit = {},
     onNavigateToOffers: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    networkName: String = "شبكة كيان تك",
+    subscriptionExpiry: String = "الاشتراك حتى 24 أكتوبر 2026",
+    remainingMessages: Int = 100,
+    salesToday: String = "0 ر.ي",
+    salesTodayCards: String = "0 كرت",
+    salesMonth: String = "0 ر.ي",
+    salesMonthCards: String = "0 كرت",
+    accountsCount: Int = 0,
+    activeCardsCount: Int = 0
 ) {
+    val isLight = BrandBackground.luminance() > 0.5f
+    val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A1A))
+            .background(BrandBackground)
             .testTag("home_screen")
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Status Bar Section
+            // App Bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "9:41",
-                    color = Color.White,
+                    color = titleColor,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.SignalCellularAlt,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Icon(
                         imageVector = Icons.Outlined.Notifications,
                         contentDescription = null,
-                        tint = Color(0xFF1A9B8E),
+                        tint = if (isLight) Color(0xFF1A9B8E) else titleColor,
                         modifier = Modifier.size(20.dp)
                     )
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clickable { onNavigateToSettings() }
-                    )
-                }
-            }
-
-            // Header with Network Name
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "شبكة كيان تك",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Text(
-                    text = "صباح الخير — الاثنين 26 أكتوبر 2021",
-                    color = Color(0xFFB0B0B0),
-                    fontSize = 12.sp
-                )
-            }
-
-            // Status Badges
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Badge(
-                    text = "الرسائل المرسلة: 100",
-                    backgroundColor = Color(0xFFFF6B6B),
-                    textColor = Color.White,
-                    modifier = Modifier.weight(1f)
-                )
-                Badge(
-                    text = "نشطة ✓",
-                    backgroundColor = Color(0xFF1A9B8E),
-                    textColor = Color.White,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Balance Card with Gradient
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFF1A9B8E),
-                                    Color(0xFFE85E97),
-                                    Color(0xFFC2185B)
-                                )
-                            ),
-                            RoundedCornerShape(16.dp)
-                        )
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "إجمالي رصيد العملات (المعلق)",
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 12.sp
-                        )
-                        
-                        Text(
-                            text = "0 ريال",
-                            color = Color.White,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            content = {
-                                Text(
-                                    text = "0 حسابات",
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 11.sp
-                                )
-                                Text(
-                                    text = "0 كروت مفعولة",
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 11.sp
-                                )
-                            }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = null,
+                            tint = titleColor
                         )
                     }
                 }
             }
 
-            // Main Action Cards Grid
+            // Network header
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Row 1
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Text(
+                    text = networkName,
+                    color = titleColor,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "الاشتراك حتى 2026/10/24",
+                    color = TextSecondary,
+                    fontSize = 13.sp
+                )
+            }
+
+            // Subscription + status row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedCard(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)
                 ) {
-                    HomeCard(
-                        title = "مبيعات اليوم",
-                        icon = Icons.Outlined.CalendarToday,
-                        value = "0 ريال",
-                        subtitle = "0 كرت",
-                        modifier = Modifier.weight(1f)
-                    )
-                    HomeCard(
-                        title = "مبيعات الشهر",
-                        icon = Icons.Outlined.DateRange,
-                        value = "0 ريال",
-                        subtitle = "0 كرت",
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "الرسائل المتبقية",
+                            color = TextSecondary,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = remainingMessages.toString(),
+                            color = titleColor,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = subscriptionExpiry,
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
                 }
 
-                // Row 2
+                OutlinedCard(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        color = if (isLight) Color(0xFF10B981) else Color(0xFF34D399),
+                                        shape = CircleShape
+                                    )
+                            )
+                            Text(
+                                text = "النظام يعمل بشكل سليم",
+                                color = titleColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Text(
+                            text = "نشط",
+                            color = titleColor,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        LinearProgressIndicator(
+                            progress = 0.72f,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp),
+                            color = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6),
+                            trackColor = if (isLight) Color(0xFFE5E7EB) else Color(0xFF27272A)
+                        )
+                    }
+                }
+            }
+
+            // Sales cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedCard(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "مبيعات اليوم",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = salesToday,
+                                color = titleColor,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = salesTodayCards,
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarToday,
+                            contentDescription = null,
+                            tint = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6)
+                        )
+                    }
+                }
+
+                OutlinedCard(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "مبيعات الشهر",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = salesMonth,
+                                color = titleColor,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = salesMonthCards,
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Outlined.DateRange,
+                            contentDescription = null,
+                            tint = if (isLight) Color(0xFFBB86FC) else Color(0xFFC084FC)
+                        )
+                    }
+                }
+            }
+
+            // Quick actions grid
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    HomeCard(
+                    QuickActionCard(
                         title = "حسابات نقاط البيع",
-                        icon = Icons.Outlined.Store,
                         value = "0",
                         subtitle = "حساب",
-                        modifier = Modifier.weight(1f)
+                        icon = Icons.Outlined.Store,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToAccounts,
+                        isLight = isLight
                     )
-                    HomeCard(
-                        title = "بيع مباشر - بدوي",
-                        icon = Icons.Outlined.Add,
-                        value = "جديد",
-                        subtitle = "+",
-                        modifier = Modifier.weight(1f)
+                    QuickActionCard(
+                        title = "البيع المباشر",
+                        value = "بدء",
+                        subtitle = "عملية جديدة",
+                        icon = Icons.Outlined.CalendarToday,
+                        modifier = Modifier.weight(1f),
+                        onClick = {},
+                        isLight = isLight
                     )
                 }
-
-                // Row 3
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    HomeCard(
-                        title = "إدارة ملفات الاستيراد",
-                        icon = Icons.Outlined.InsertDriveFile,
+                    QuickActionCard(
+                        title = "إدارة الملفات",
                         value = "0",
                         subtitle = "ملف",
-                        modifier = Modifier.weight(1f)
+                        icon = Icons.Outlined.DateRange,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToCards,
+                        isLight = isLight
                     )
-                    HomeCard(
+                    QuickActionCard(
                         title = "الأرقام المحظورة",
-                        icon = Icons.Outlined.Shield,
                         value = "0",
                         subtitle = "رقم",
-                        modifier = Modifier.weight(1f)
+                        icon = Icons.Outlined.Shield,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToOffers,
+                        isLight = isLight
                     )
                 }
             }
 
-            // Recent Transactions Section
+            // Recent operations
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -270,34 +361,36 @@ fun HomeScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .background(
-                                    Color(0xFFFF6B6B),
-                                    RoundedCornerShape(4.dp)
+                                    color = if (isLight) Color(0xFFEF4444) else Color(0xFFFF6B6B),
+                                    shape = CircleShape
                                 )
                         )
                         Text(
                             text = "آخر العمليات",
-                            color = Color.White,
-                            fontSize = 14.sp,
+                            color = titleColor,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    Text(
-                        text = "عرض الكل →",
-                        color = Color(0xFF1A9B8E),
-                        fontSize = 12.sp
-                    )
+                    TextButton(onClick = onNavigateToReports) {
+                        Text(
+                            text = "عرض الكل →",
+                            color = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6),
+                            fontSize = 13.sp
+                        )
+                    }
                 }
 
-                Card(
+                ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
                 ) {
                     Box(
                         modifier = Modifier
@@ -307,159 +400,79 @@ fun HomeScreen(
                     ) {
                         Text(
                             text = "لا توجد عمليات حديثة",
-                            color = Color(0xFF808080),
-                            fontSize = 13.sp,
+                            color = TextSecondary,
+                            fontSize = 14.sp,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(80.dp))
-        }
-
-        // Bottom Navigation
-        BottomNavigation(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
-    }
-}
-
-@Composable
-private fun Badge(
-    text: String,
-    backgroundColor: Color,
-    textColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.height(32.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor.copy(alpha = 0.15f)),
-        border = BorderStroke(1.dp, backgroundColor.copy(alpha = 0.3f)),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = textColor,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }
 
 @Composable
-private fun HomeCard(
+private fun QuickActionCard(
     title: String,
-    icon: androidx.compose.material.icons.materialIcon?,
     value: String,
     subtitle: String,
-    modifier: Modifier = Modifier
+    icon: androidx.compose.material.icons.Icons.Outlined?,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    isLight: Boolean
 ) {
-    Card(
-        modifier = modifier.height(120.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-        border = BorderStroke(1.dp, Color(0xFF333333)),
-        shape = RoundedCornerShape(12.dp)
+    OutlinedCard(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceEvenly,
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon ?: Icons.Outlined.MoreVert,
-                contentDescription = null,
-                tint = Color(0xFF1A9B8E),
-                modifier = Modifier.size(28.dp)
-            )
-            
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(
+                        color = if (isLight) Color(0xFFF5F5F5) else Color(0xFF1E1E21),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon ?: Icons.Outlined.MoreVert,
+                    contentDescription = null,
+                    tint = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6),
+                    modifier = Modifier.size(26.dp)
+                )
+            }
             Text(
                 text = title,
-                color = Color(0xFFB0B0B0),
-                fontSize = 11.sp,
+                color = if (isLight) Color(0xFF444444) else TextSecondary,
+                fontSize = 12.sp,
                 textAlign = TextAlign.Center,
-                lineHeight = 13.sp
+                lineHeight = 14.sp
             )
-            
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     text = value,
-                    color = Color.White,
+                    color = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = subtitle,
-                    color = Color(0xFF808080),
-                    fontSize = 10.sp
+                    color = TextSecondary,
+                    fontSize = 11.sp
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun BottomNavigation(
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)),
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        border = BorderStroke(1.dp, Color(0xFF333333))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavItem("الكروت", Icons.Outlined.CreditCard)
-            NavItem("الحسابات", Icons.Outlined.AccountBox)
-            NavItem("العروض", Icons.Outlined.LocalOffer)
-            NavItem("التقارير", Icons.Outlined.Assessment)
-            NavItem("الرئيسية", Icons.Outlined.Home, isSelected = true)
-        }
-    }
-}
-
-@Composable
-private fun NavItem(
-    label: String,
-    icon: androidx.compose.material.icons.materialIcon,
-    isSelected: Boolean = false
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = label,
-            color = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
     }
 }
