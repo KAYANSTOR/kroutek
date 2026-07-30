@@ -37,7 +37,6 @@ private val _isTrial = MutableStateFlow(false)
 
     private val _showKeyField = MutableStateFlow(true)
     val showKeyField: StateFlow<Boolean> = _showKeyField.asStateFlow()
-    }
 
     // Actions for UI events
     fun onTrialSelected(isTrial: Boolean) {
