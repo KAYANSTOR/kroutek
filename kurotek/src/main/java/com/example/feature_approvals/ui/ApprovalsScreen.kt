@@ -32,6 +32,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +61,8 @@ fun PendingApprovalsTab(
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    val pendingApprovals by dashboardViewModel.pendingApprovals.collectAsState()
+    val pendingCount by dashboardViewModel.pendingApprovalsCount.collectAsState()
     var showLinkDialog by remember { mutableStateOf(false) }
     var selectedStatus by remember { mutableIntStateOf(0) }
 
@@ -143,7 +147,7 @@ fun PendingApprovalsTab(
                                 fontSize = 12.sp
                             )
                             Text(
-                                text = "0",
+                                text = pendingCount.toString(),
                                 color = titleColor,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.ExtraBold
@@ -160,12 +164,16 @@ fun PendingApprovalsTab(
                     }
                 }
 
-                listOf(
-                    ApprovalItemData("طلب تعبئة كرت 500", "العميل: 777123456", "لا يوجد مخزون", Color(0xFFFF6B6B)),
-                    ApprovalItemData("طلب تعبئة كرت 200", "العميل: 771234567", "فشل الإرسال", Color(0xFFF59E0B)),
-                    ApprovalItemData("طلب تعبئة كرت 300", "العميل: 770987654", "بانتظار التأكيد", Color(0xFF3B82F6))
-                ).forEach { item ->
-                    ApprovalCard(item = item, isLight = isLight)
+                pendingApprovals.forEach { item ->
+                    ApprovalCard(
+                        item = ApprovalItemData(
+                            title = "طلب تعبئة كرت ${item.amount}",
+                            subtitle = "العميل: ${item.phone}",
+                            status = "معلق",
+                            statusColor = Color(0xFFF59E0B)
+                        ),
+                        isLight = isLight
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

@@ -50,6 +50,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -82,6 +83,10 @@ fun DistributorSystemScreen(
     val context = LocalContext.current
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    val customers by viewModel.distributorCustomers.collectAsState()
+    val transactions by viewModel.distributorTransactions.collectAsState()
+    val expenses by viewModel.distributorExpenses.collectAsState()
+    val capitals by viewModel.distributorCapitals.collectAsState()
     var selectedTab by remember { mutableIntStateOf(initialTab) }
     var calcType by remember { mutableStateOf("REGULAR") }
 
@@ -155,9 +160,9 @@ fun DistributorSystemScreen(
 
             when (selectedTab) {
                 0 -> DistributorCalcTab(isLight = isLight, titleColor = titleColor, calcType = calcType, onCalcTypeChange = { calcType = it })
-                1 -> DistributorCustomersTab(isLight = isLight, titleColor = titleColor)
-                2 -> DistributorFinancialsTab(isLight = isLight, titleColor = titleColor)
-                3 -> DistributorReportsTab(isLight = isLight, titleColor = titleColor)
+                1 -> DistributorCustomersTab(customers = customers, isLight = isLight, titleColor = titleColor)
+                2 -> DistributorFinancialsTab(transactions = transactions, expenses = expenses, capitals = capitals, isLight = isLight, titleColor = titleColor)
+                3 -> DistributorReportsTab(transactions = transactions, capitals = capitals, isLight = isLight, titleColor = titleColor)
                 4 -> DistributorPricingTab(isLight = isLight, titleColor = titleColor)
                 else -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("جاري التطوير...", color = TextSecondary)
@@ -285,7 +290,11 @@ private fun DistributorCalcTab(isLight: Boolean, titleColor: Color, calcType: St
 }
 
 @Composable
-private fun DistributorCustomersTab(isLight: Boolean, titleColor: Color) {
+private fun DistributorCustomersTab(
+    customers: List<com.example.models.DistributorCustomer>,
+    isLight: Boolean,
+    titleColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -334,7 +343,7 @@ private fun DistributorCustomersTab(isLight: Boolean, titleColor: Color) {
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(text = "عدد العملاء", color = TextSecondary, fontSize = 12.sp)
-                    Text(text = "0", color = BrandPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(text = customers.size.toString(), color = BrandPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -382,43 +391,53 @@ private fun DistributorCustomersTab(isLight: Boolean, titleColor: Color) {
             }
         }
 
-        listOf(
-            Triple("أحمد جابر", "777123456", "+0"),
-            Triple("سارة علي", "771234567", "+0"),
-            Triple("خالد عمر", "770987654", "+0")
-        ).forEach { (name, phone, balance) ->
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier.size(42.dp).background(color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E), shape = CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Outlined.People, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(20.dp))
-                        }
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = name, color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                            Text(text = phone, color = TextSecondary, fontSize = 12.sp)
+        if (customers.isEmpty()) {
+                        Text(
+                            text = "لا يوجد عملاء",
+                            color = TextSecondary,
+                            fontSize = 14.sp
+                        )
+                    } else {
+                        customers.take(5).forEach { customer ->
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Box(
+                                            modifier = Modifier.size(42.dp).background(color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E), shape = CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Outlined.People, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(20.dp))
+                                        }
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Text(text = customer.name, color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                            Text(text = customer.phone, color = TextSecondary, fontSize = 12.sp)
+                                        }
+                                    }
+                                    Text(text = "+0", color = Color(0xFF22C55E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
-                    Text(text = balance, color = Color(0xFF22C55E), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
         Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
-private fun DistributorFinancialsTab(isLight: Boolean, titleColor: Color) {
+private fun DistributorFinancialsTab(
+    transactions: List<com.example.models.DistributorTransaction>,
+    expenses: List<com.example.models.DistributorExpense>,
+    capitals: List<com.example.models.DistributorCapital>,
+    isLight: Boolean,
+    titleColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -469,7 +488,7 @@ private fun DistributorFinancialsTab(isLight: Boolean, titleColor: Color) {
                     OutlinedCard(onClick = {}, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurface)) {
                         Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("إجمالي المصروفات", color = titleColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            Text("0", color = Color(0xFFEF4444), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(text = expenses.size.toString(), color = Color(0xFFEF4444), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -480,7 +499,12 @@ private fun DistributorFinancialsTab(isLight: Boolean, titleColor: Color) {
 }
 
 @Composable
-private fun DistributorReportsTab(isLight: Boolean, titleColor: Color) {
+private fun DistributorReportsTab(
+    transactions: List<com.example.models.DistributorTransaction>,
+    capitals: List<com.example.models.DistributorCapital>,
+    isLight: Boolean,
+    titleColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -505,7 +529,7 @@ private fun DistributorReportsTab(isLight: Boolean, titleColor: Color) {
                     OutlinedCard(onClick = {}, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text("المبيعات", color = TextSecondary, fontSize = 11.sp)
-                            Text("0", color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+Text(text = capitals.sumOf { it.amount }.toString(), color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

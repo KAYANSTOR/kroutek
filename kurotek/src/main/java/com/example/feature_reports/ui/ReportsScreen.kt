@@ -33,6 +33,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +64,8 @@ fun ReportsTab(
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     val accent = BrandSecondary
+    val reportData by reportsViewModel.reportData.collectAsState()
+    val transactions by salesViewModel.transactions.collectAsState()
     var selectedReport by remember { mutableIntStateOf(0) }
     val reportTypes = listOf("يومي", "أسبوعي", "شهري")
     val wallets = listOf("الكل", "جيب", "جوالي", "ون كاش", "كريمي")
@@ -194,7 +198,7 @@ fun ReportsTab(
                                     fontSize = 12.sp
                                 )
                                 Text(
-                                    text = "0",
+                                    text = transactions.size.toString(),
                                     color = titleColor,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.ExtraBold
@@ -234,14 +238,14 @@ fun ReportsTab(
                 ) {
                     ReportStatCard(
                         label = "العمليات",
-                        value = "0",
+                        value = transactions.size.toString(),
                         accent = accent,
                         isLight = isLight,
                         modifier = Modifier.weight(1f)
                     )
                     ReportStatCard(
                         label = "المبالغ",
-                        value = "0",
+                        value = "${transactions.sumOf { it.amount }} ر.ي",
                         accent = Color(0xFF22C55E),
                         isLight = isLight,
                         modifier = Modifier.weight(1f)
@@ -251,6 +255,7 @@ fun ReportsTab(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    val pendingCount by dashboardViewModel.pendingApprovalsCount.collectAsState()
                     ReportStatCard(
                         label = "الموافق عليها",
                         value = "0",
@@ -260,7 +265,7 @@ fun ReportsTab(
                     )
                     ReportStatCard(
                         label = "قيد الانتظار",
-                        value = "0",
+                        value = pendingCount.toString(),
                         accent = Color(0xFFF59E0B),
                         isLight = isLight,
                         modifier = Modifier.weight(1f)
@@ -317,9 +322,22 @@ fun ReportsTab(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        ReportRowItem(title = "عملية ناجحة", subtitle = "جيب | 500 | 2026-07-30", color = Color(0xFF22C55E), isLight = isLight)
-                        ReportRowItem(title = "عملية معلقة", subtitle = "جوالي | 200 | 2026-07-30", color = Color(0xFFF59E0B), isLight = isLight)
-                        ReportRowItem(title = "عملية مرفوضة", subtitle = "ون كاش | 100 | 2026-07-30", color = Color(0xFFEF4444), isLight = isLight)
+                        if (transactions.isEmpty()) {
+                        Text(
+                            text = "لا توجد عمليات بعد",
+                            color = TextSecondary,
+                            fontSize = 12.sp
+                        )
+                    } else {
+                        transactions.take(5).forEach { txn ->
+                            ReportRowItem(
+                                title = txn.walletType.ifEmpty { "عملية"},
+                                subtitle = "${txn.walletType} | ${txn.amount} | ${java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date(txn.createdAt))}",
+                                color = if (txn.amount > 0) Color(0xFF22C55E) else Color(0xFFEF4444),
+                                isLight = isLight
+                            )
+                        }
+                    }
                     }
                 }
 

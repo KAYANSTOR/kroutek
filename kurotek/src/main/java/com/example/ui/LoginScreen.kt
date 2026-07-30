@@ -31,8 +31,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,14 +56,15 @@ import androidx.compose.ui.platform.testTag
 fun LoginScreen(
     authViewModel: AuthViewModel,
     mainViewModel: MainViewModel,
-    smsViewModel: SettingsViewModel,
+    smsViewModel: SettingsViewModel, // This is actually SettingsViewModel despite the name
     onLoginSuccess: () -> Unit = {}
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
-    var networkNameInput by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
+    
+    // Collect network name from SettingsViewModel (which holds the network name)
+    val networkName by smsViewModel.networkName.collectAsStateWithLifecycle()
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -130,10 +131,10 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OutlinedTextField(
-                        value = networkNameInput,
+                        value = networkName,
                         onValueChange = {
-                            networkNameInput = it
-                            errorMessage = null
+                            // Update the ViewModel when user types
+                            smsViewModel.updateNetworkName(it)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -151,27 +152,17 @@ fun LoginScreen(
                         shape = RoundedCornerShape(14.dp)
                     )
 
-                    if (errorMessage != null) {
-                        Text(
-                            text = errorMessage!!,
-                            color = if (isLight) Color(0xFFEF4444) else Color(0xFFFF6B6B),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
                     TextButton(
                         onClick = {
-                            val trimmed = networkNameInput.trim()
+                            val trimmed = networkName.trim()
                             if (trimmed.isEmpty()) {
-                                errorMessage = "يرجى إدخال اسم الشبكة"
-                            } else {
-                                errorMessage = null
-                                smsViewModel.updateNetworkName(trimmed)
-                                onLoginSuccess()
+                                // Show error - in a real app we might have error state in ViewModel
+                                // For now, we'll just not proceed if empty
+                                return@TextButton
                             }
+                            // Proceed with login
+                            authViewModel.setInitialLoginDone(true)
+                            onLoginSuccess()
                         },
                         modifier = Modifier
                             .fillMaxWidth()

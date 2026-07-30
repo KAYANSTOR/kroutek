@@ -11,6 +11,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,10 +24,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.GraphicsLayer
+import androidx.compose.ui.color.Color
+import androidx.compose.ui.draw.Blur
+import androidx.compose.ui.input.keyboard.Key
+import androidx.compose.ui.input.keyboard.keyboardActions
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,19 +39,13 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.network.SyncService
 import com.example.ui.*
+import com.example.ui.activation.ActivationViewModelFactory
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.DeepBlack
 import com.example.ui.theme.SurfaceDark
 import com.example.ui.theme.PureWhite
 import dagger.hilt.android.AndroidEntryPoint
-
-enum class AppScreen {
-    WELCOME,
-    ACTIVATION,
-    MAIN,
-    PIN_LOCK
-}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -59,53 +59,57 @@ class MainActivity : ComponentActivity() {
                 
                 // MainViewModel is injected via Hilt
                 val mainViewModel: MainViewModel = hiltViewModel()
-
+                
                 val authFactory = remember { AuthViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val authViewModel: com.example.ui.AuthViewModel = viewModel(factory = authFactory)
-
+                
                 val smsFactory = remember { SmsViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 // SmsViewModel is kept for background SMS processing service only
                 @Suppress("UNUSED_VARIABLE")
                 val smsViewModel: com.example.ui.SmsViewModel = viewModel(factory = smsFactory)
-
+                
                 val settingsFactory = remember { SettingsViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val settingsViewModel: com.example.ui.SettingsViewModel = viewModel(factory = settingsFactory)
-
+                
                 val distFactory = remember { DistributorViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val distributorViewModel: com.example.ui.DistributorViewModel = viewModel(factory = distFactory)
-
+                
                 // New Clean Architecture ViewModels
                 val dashboardFactory = remember { DashboardViewModelFactory(coreContainer) }
                 val dashboardViewModel: com.example.ui.DashboardViewModel = viewModel(factory = dashboardFactory)
-
+                
                 val inventoryFactory = remember { InventoryViewModelFactory(coreContainer) }
                 val inventoryViewModel: com.example.ui.InventoryViewModel = viewModel(factory = inventoryFactory)
-
+                
                 val salesFactory = remember { SalesViewModelFactory(coreContainer) }
                 val salesViewModel: com.example.ui.SalesViewModel = viewModel(factory = salesFactory)
-
+                
                 val reportsFactory = remember { ReportsViewModelFactory(coreContainer) }
                 val reportsViewModel: com.example.ui.ReportsViewModel = viewModel(factory = reportsFactory)
-
+                
                 val walletFactory = remember { WalletViewModelFactory(coreContainer) }
                 val walletViewModel: com.example.ui.WalletViewModel = viewModel(factory = walletFactory)
-
+                
                 val mikrotikFactory = remember { MikrotikViewModelFactory(coreContainer) }
-                val mikrotikViewModel: com.example.ui.MikrotikViewModel = viewModel(factory = mikrotikFactory)
-
+                val mikrotikVieshortModel: com.example.ui.MikrotikViewModel = viewModel(factory = mikrotikFactory)
+                
+                // Activation ViewModel
+                val activationFactory = remember { ActivationViewModelFactory(authViewModel, coreContainer.cardRepository) }
+                val activationViewModel: com.example.ui.ActivationViewModel = viewModel(factory = activationFactory)
+                
                 val isDarkTheme by mainViewModel.isDarkTheme.collectAsState()
                 LaunchedEffect(isDarkTheme) {
                     com.example.ui.theme.isDarkThemeState.value = isDarkTheme
                 }
-
+                
                 val isActivated by authViewModel.isActivated.collectAsState()
                 val isTrialActive by authViewModel.isTrialActive.collectAsState()
                 val isInitialLoginDone by authViewModel.isInitialLoginDone.collectAsState()
                 val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
                 val isPinEnabled by remember { mutableStateOf(coreContainer.cardRepository.isAppPinEnabled()) }
-
+                
                 var currentScreen by remember { mutableStateOf(AppScreen.WELCOME) }
-
+                
                 // Check and request run-time SMS & notification permissions
                 val requiredPermissions = remember {
                     val permissions = mutableListOf(
@@ -118,7 +122,7 @@ class MainActivity : ComponentActivity() {
                     }
                     permissions.toTypedArray()
                 }
-
+                
                 var hasSmsPermissions by remember {
                     mutableStateOf(
                         requiredPermissions.all {
@@ -126,13 +130,13 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-
+                
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissionsResult ->
                     hasSmsPermissions = permissionsResult.values.all { it }
                 }
-
+                
                 // Auto route from/to activation screen and request permissions
                 LaunchedEffect(isActivated, isTrialActive, isInitialLoginDone, isLoggedIn, isPinEnabled, hasSmsPermissions) {
                     currentScreen = when {
@@ -147,7 +151,7 @@ class MainActivity : ComponentActivity() {
                         permissionLauncher.launch(requiredPermissions)
                     }
                 }
-
+                
                 Scaffold(
                     modifier = Modifier
                         .fillMaxSize()
@@ -170,7 +174,8 @@ class MainActivity : ComponentActivity() {
                             }
                             AppScreen.ACTIVATION -> {
                                 ActivationScreen(
-                                    authViewModel = authViewModel
+                                    activationViewModel = activationViewModel,
+                                    onActivationSuccess = {} // Routing is handled by LaunchedEffect
                                 )
                             }
                             AppScreen.PIN_LOCK -> {
@@ -201,7 +206,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-
+                        
                         // Display custom permission notice if logged in but permissions are missing
                         AnimatedVisibility(
                             visible = isActivated && !hasSmsPermissions,
@@ -232,7 +237,7 @@ class MainActivity : ComponentActivity() {
                                             tint = GoldPrimary,
                                             modifier = Modifier.size(56.dp)
                                         )
-
+                                        
                                         Text(
                                             text = "مطلوب صلاحيات الرسائل SMS",
                                             fontWeight = FontWeight.Bold,
@@ -241,16 +246,16 @@ class MainActivity : ComponentActivity() {
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         )
-
+                                        
                                         Text(
-                                            text = "لكي يتمكن تطبيق كروت الدحشة من قراءة وتصفية رسائل الإشعارات الواردة وتحديداً من محفظة 'جيب' ومحفظة 'جوالي' وتوزيع كروت الشحن تلقائياً لعملائك، يتطلب منح الهاتف صلاحية قراءة واستقبال وإرسال رسائل SMS.",
+                                            .كذن ذلك تطبيق كروت الدحشة من قراءة وتصفية رسائل الإشعارات الواردة وتحديداً من محفظة 'جيب' ومحفظة 'جوالي' وتوزيع كروت الشحن تلقائياً لعملائك، يتطلب منح الهاتف صلاحية قراءة واستقبال وإرسال رسائل SMS.",
                                             fontSize = 14.sp,
                                             color = PureWhite,
                                             lineHeight = 20.sp,
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         )
-
+                                        
                                         Button(
                                             onClick = {
                                                 permissionLauncher.launch(requiredPermissions)

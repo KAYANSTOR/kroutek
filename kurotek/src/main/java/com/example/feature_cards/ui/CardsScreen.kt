@@ -36,6 +36,8 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,10 +70,13 @@ fun CardsTab(
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     val isAutoSendSmsEnabled by smsViewModel.isAutoSendSmsEnabled.collectAsState()
+    val allCards by inventoryViewModel.allCards.collectAsState()
     var showAddSection by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableIntStateOf(100) }
     val categories = listOf(100, 200, 250, 300, 500)
+    val totalUnused = allCards.count { !it.used }
+    val categoryCounts = categories.associateWith { cat -> allCards.count { it.category == cat && !it.used } }
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -381,7 +386,7 @@ fun CardsTab(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "0 كرت متاح",
+                                    text = "${categoryCounts[category] ?: 0} كرت متاح",
                                     color = TextSecondary,
                                     fontSize = 12.sp
                                 )

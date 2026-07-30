@@ -1,58 +1,7 @@
-package com.example.ui
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Work
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.ui.theme.BrandBackground
-import com.example.ui.theme.BrandPrimary
-import com.example.ui.theme.BrandSurface
-import com.example.ui.theme.BrandSurfaceVariant
-import com.example.ui.theme.TextSecondary
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.testTag
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivationScreen(
+    activationViewModel: ActivationViewModel,
     onActivationSuccess: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -62,14 +11,16 @@ fun ActivationScreen(
     val selectedBorder = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6)
     val selectedBg = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E)
     val fieldBg = if (isLight) Color(0xFFF5F5F5) else Color(0xFF1E1E21)
-
-    var selectedStep by remember { mutableStateOf(0) }
-    var phone by remember { mutableStateOf("") }
-    var networkName by remember { mutableStateOf("") }
-    var activationKey by remember { mutableStateOf("") }
-    var isTrial by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var showKeyField by remember { mutableStateOf(true) }
+    
+    // Collect state from ViewModel
+    val selectedStep by activationViewModel.selectedStep.collectAsState()
+    val phone by activationViewModel.phone.collectAsState()
+    val networkName by activationViewModel.networkName.collectAsState()
+    val activationKey by activationViewModel.activationKey.collectAsState()
+    val isTrial by activationViewModel.isTrial.collectAsState()
+    val showKeyField by activationViewModel.showKeyField.collectAsState()
+    val isLoading by activationViewModel.isLoading.collectAsState()
+    val errorMessage by activationViewModel.errorMessage.collectAsState()
 
     Box(
         modifier = Modifier
@@ -146,25 +97,22 @@ fun ActivationScreen(
             when (selectedStep) {
                 0 -> VersionStep(
                     isTrial = isTrial,
-                    onTrialChanged = {
-                        isTrial = it
-                        showKeyField = !it
-                    },
+                    onTrialChanged = { activationViewModel.onTrialSelected(it) },
                     isLight = isLight,
                     selectedBorder = selectedBorder,
                     selectedBg = selectedBg
                 )
                 1 -> PhoneStep(
                     phone = phone,
-                    onPhoneChanged = { phone = it },
+                    onPhoneChanged = { activationViewModel.onPhoneChanged(it) },
                     isLight = isLight
                 )
                 2 -> KeyStep(
                     networkName = networkName,
                     activationKey = activationKey,
                     showKeyField = showKeyField,
-                    onNetworkChanged = { networkName = it },
-                    onKeyChanged = { activationKey = it },
+                    onNetworkChanged = { activationViewModel.onNetworkChanged(it) },
+                    onKeyChanged = { activationViewModel.onKeyChanged(it) },
                     isLight = isLight,
                     fieldBg = fieldBg
                 )
@@ -175,20 +123,32 @@ fun ActivationScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (selectedStep > 0) {
-                    TextButton(onClick = { selectedStep-- }) {
+                    TextButton(
+                        onClick = { activationViewModel.goToPreviousStep() },
+                        enabled = !isLoading
+                    ) {
                         Text(text = "السابق", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                 }
 
+                // Main action button (Next or Activate)
                 Button(
                     onClick = {
                         when (selectedStep) {
-                            0 -> selectedStep = 1
-                            1 -> selectedStep = 2
+                            0 -> activationViewModel.goToNextStep()
+                            1 -> activationViewModel.goToNextStep()
                             2 -> {
-                                isLoading = true
-                                onActivationSuccess()
+                                // Attempt activation
+                                activationViewModel.activate(
+                                    onSuccess = {
+                                        // Activation successful
+                                        onActivationSuccess()
+                                    },
+                                    onError = { errorMsg ->
+                                        // Error is already set in ViewModel via state
+                                    }
+                                )
                             }
                         }
                     },
@@ -196,48 +156,46 @@ fun ActivationScreen(
                         .weight(1f)
                         .height(48.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
-                    enabled = when (selectedStep) {
-                        0 -> true
-                        1 -> phone.isNotBlank()
-                        2 -> networkName.isNotBlank() && (showKeyField && activationKey.isNotBlank() || !showKeyField)
-                        else -> false
-                    }
-                ) {
-                    Text(
-                        text = when (selectedStep) {
-                            2 -> if (isTrial) "تفعيل النسخة التجريبية" else "تفعيل"
-                            else -> "التالي"
-                        },
-                        color = Color.Black,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isLoading) 
+                            BrandPrimary.copy(alpha = 0.5f) 
+                        else 
+                            BrandPrimary,
+                        disabledContentColor = Color.White.copy(alpha = 0.5f)
                     )
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = when (selectedStep) {
+                                0 -> "التالي"
+                                1 -> "التالي"
+                                2 -> if (isTrial) "تجربة مجانية" else "تفعيل"
+                            },
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
                 }
             }
 
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = BrandSurfaceVariant)
-            ) {
-                Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = "تنبيه هام",
-                        color = titleColor,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "يرجى التأكد من صحة البيانات المدخلة قبل تفعيل الترخيص، لأن الترخيص مرتبط بجهازك الحالي.",
-                        color = subtitleColor,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
-                    )
-                }
+            // Error message (if any)
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color(0xFFEF4444),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
             }
         }
     }
@@ -252,6 +210,7 @@ private fun VersionStep(
     selectedBg: Color
 ) {
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    val subtitleColor = if (isLight) Color(0xFF555555) else TextSecondary
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(text = "اختر النسخة", color = titleColor, fontSize = 15.sp, fontWeight = FontWeight.Bold)
         SelectableOption(
@@ -276,7 +235,11 @@ private fun VersionStep(
 }
 
 @Composable
-private fun PhoneStep(phone: String, onPhoneChanged: (String) -> Unit, isLight: Boolean) {
+private fun PhoneStep(
+    phone: String,
+    onPhoneChanged: (String) -> Unit,
+    isLight: Boolean
+) {
     val fieldBg = if (isLight) Color(0xFFF5F5F5) else Color(0xFF1E1E21)
     val textColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     OutlinedCard(
@@ -290,8 +253,13 @@ private fun PhoneStep(phone: String, onPhoneChanged: (String) -> Unit, isLight: 
                 onValueChange = onPhoneChanged,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                placeholder = { Text(text = "773303455") }
+                placeholder = { Text(text = "773303455") },
+                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Right, color = textColor),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6),
+                    unfocusedBorderColor = TextSecondary.copy(alpha = 0.25f)
+                ),
+                shape = RoundedCornerShape(16.dp)
             )
         }
     }
@@ -309,38 +277,36 @@ private fun KeyStep(
 ) {
     val textColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedCard(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.outlinedCardColors(containerColor = fieldBg)
-        ) {
-            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(text = "اسم الشبكة", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(text = "اسم الشبكة", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        OutlinedTextField(
+            value = networkName,
+            onValueChange = onNetworkChanged,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = { Text(text = "شبكة كيان تك") },
+            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Right, color = textColor),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6),
+                unfocusedBorderColor = TextSecondary.copy(alpha = 0.25f)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        )
+        if (showKeyField) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(text = "رمز التفعيل", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(
-                    value = networkName,
-                    onValueChange = onNetworkChanged,
+                    value = activationKey,
+                    onValueChange = onKeyChanged,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text(text = "شبكة كيان تك") }
+                    placeholder = { Text(text = "XXXX-XXXX-XXXX") },
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Right, color = textColor),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (isLight) Color(0xFF03DAC5) else Color(0xFF14B8A6),
+                        unfocusedBorderColor = TextSecondary.copy(alpha = 0.25f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 )
-            }
-        }
-        if (showKeyField) {
-            OutlinedCard(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.outlinedCardColors(containerColor = fieldBg)
-            ) {
-                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(text = "رمز التفعيل", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    OutlinedTextField(
-                        value = activationKey,
-                        onValueChange = onKeyChanged,
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        placeholder = { Text(text = "XXXX-XXXX-XXXX") }
-                    )
-                }
             }
         }
     }
@@ -359,18 +325,16 @@ private fun SelectableOption(
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     val subtitleColor = if (isLight) Color(0xFF666666) else TextSecondary
     OutlinedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.outlinedCardColors(containerColor = if (selected) selectedBg else BrandSurface),
-        border = if (selected) androidx.compose.foundation.BorderStroke(2.dp, selectedBorder) else null,
-        onClick = onClick
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        colors = CardDefaults.outlinedCardColors(containerColor = if (selected) selectedBg else Color(0xFFF5F5F5)),
+        border = if (selected) BorderStroke(2.dp, selectedBorder) else null
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -379,14 +343,14 @@ private fun SelectableOption(
                         color = if (selected) selectedBorder else Color.Transparent,
                         shape = CircleShape
                     ),
-                contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center
             ) {
                 if (selected) {
                     Box(
                         modifier = Modifier
                             .size(10.dp)
                             .background(color = Color.White, shape = CircleShape)
-                    )
+                        )
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

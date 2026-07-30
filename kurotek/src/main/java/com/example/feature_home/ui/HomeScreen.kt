@@ -1,5 +1,6 @@
 package com.example.feature_home.ui
 
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Store
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,16 +38,19 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.feature_cards.ui.CardsTab
+import com.example.feature_approvals.ui.PendingApprovalsTab
+import com.example.feature_customers.ui.SpecialCustomersTab
+import com.example.feature_reports.ui.ReportsTab
 import com.example.ui.theme.BrandBackground
 import com.example.ui.theme.BrandPrimary
 import com.example.ui.theme.BrandSecondary
@@ -53,28 +58,98 @@ import com.example.ui.theme.BrandSurface
 import com.example.ui.theme.BrandSurfaceVariant
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.isDarkThemeState
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.testChannel
+import kotlinx.coroutines.datetime.format
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    authViewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel,
+    smsViewModel: SmsViewModel,
+    inventoryViewModel: InventoryViewModel,
+    salesViewModel: SalesViewModel,
     onNavigateToCards: () -> Unit = {},
     onNavigateToAccounts: () -> Unit = {},
     onNavigateToOffers: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {},
-    networkName: String = "شبكة كيان تك",
-    subscriptionExpiry: String = "الاشتراك حتى 24 أكتوبر 2026",
-    remainingMessages: Int = 100,
-    salesToday: String = "0 ر.ي",
-    salesTodayCards: String = "0 كرت",
-    salesMonth: String = "0 ر.ي",
-    salesMonthCards: String = "0 كرت",
-    accountsCount: Int = 0,
-    activeCardsCount: Int = 0
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    
+    // Collect and format data from ViewModels
+    val networkName by settingsViewModel.networkName.collectAsStateWithLifecycle()
+    
+    // Format expiration date from license status
+    val subscriptionExpiry by authViewModel.licenseStatus
+        .map { licenseStatus ->
+            licenseStatus?.expiryDate?.let { timestamp ->
+                val date = Date(timestamp)
+                // Format as "YYYY/MM/DD" to match UI
+                String.format(Locale.getDefault(), "%04d/%02d/%02d",
+                    date.year + 1900, date.month + 1, date.date)
+            } ?: "غير محدد"
+        }
+        .collectAsStateWithLifecycle()
+    
+    // Remaining messages - using SMS daily limit remaining as placeholder
+    // TODO: Replace with actual SMS quota tracking when available
+    val remainingMessages by smsViewModel.isAutoSendSmsEnabled
+        .map { if (it) "غير محدود" else "100" } // Placeholder logic
+        .collectAsStateWithLifecycle()
+    
+    // Today's sales
+    val salesToday by salesViewModel.transactions
+        .map { transactions ->
+            val today = Date()
+            val todayStart = Date(today.year + 1900, today.month, 1, 0, 0, 0) // Actually need proper today start
+            // For now, simple placeholder - will improve with proper date filtering
+            val todayTransactions = transactions.filter { 
+                // This is a simplified check - in reality we'd compare dates properly
+                it.date.after(getStartOfDay(today)) && it.date.before(getEndOfDay(today))
+            }
+            val total = todayTransactions.sumOf { it.amount.toDouble() }
+            val count = todayTransactions.size
+            "${"%.0f".format(total)} ر.ي" to count
+        }
+        .collectAsStateWithLifecycle()
+        .let { (amount, count) -> amount to count }
+    
+    // This month's sales
+    val salesMonth by salesViewModel.transactions
+        .map { transactions ->
+            val now = Date()
+            val monthTransactions = transactions.filter { 
+                it.date.month + 1 == now.month + 1 && 
+                it.date.year + 1900 == now.year + 1900
+            }
+            val total = monthTransactions.sumOf { it.amount.toDouble() }
+            val count = monthTransactions.size
+            "${"%.0f".format(total)} ر.ي" to count
+        }
+        .collectAsStateWithLifecycle()
+        .let { (amount, count) -> amount to count }
+    
+    // Account count - using customer mappings as proxy for now
+    // TODO: Replace with actual accounts/customers count when available
+    val accountsCount by smsViewModel.allMappings
+        .map { it.size }
+        .collectAsStateWithLifecycle()
+    
+    // Active cards count (unused cards)
+    val activeCardsCount by inventoryViewModel.totalUnusedCount.collectAsStateWithLifecycle()
+    
+    // Helper functions for date range filtering
+    private fun getStartOfDay(date: Date): Date {
+        return Date(date.year + 1900, date.month, date.date, 0, 0, 0)
+    }
+    
+    private fun getEndOfDay(date: Date): Date {
+        return Date(date.year + 1900, date.month, date.date, 23, 59, 59)
+    }
 
     Box(
         modifier = Modifier
@@ -132,7 +207,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "الاشتراك حتى 2026/10/24",
+                    text = "الاشتراك حتى $subscriptionExpiry",
                     color = TextSecondary,
                     fontSize = 13.sp
                 )
@@ -143,6 +218,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Remaining messages card
                 OutlinedCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -158,19 +234,15 @@ fun HomeScreen(
                             fontSize = 12.sp
                         )
                         Text(
-                            text = remainingMessages.toString(),
+                            text = "$remainingMessages",
                             color = titleColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = subscriptionExpiry,
-                            color = TextSecondary,
-                            fontSize = 11.sp
-                        )
                     }
                 }
 
+                // System status card
                 OutlinedCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -222,6 +294,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Today's sales
                 OutlinedCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -241,13 +314,13 @@ fun HomeScreen(
                                 fontSize = 12.sp
                             )
                             Text(
-                                text = salesToday,
+                                text = "${salesToday.first}",
                                 color = titleColor,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = salesTodayCards,
+                                text = "${salesToday.second} كرت",
                                 color = TextSecondary,
                                 fontSize = 12.sp
                             )
@@ -260,6 +333,7 @@ fun HomeScreen(
                     }
                 }
 
+                // Month's sales
                 OutlinedCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -279,13 +353,13 @@ fun HomeScreen(
                                 fontSize = 12.sp
                             )
                             Text(
-                                text = salesMonth,
+                                text = "${salesMonth.first}",
                                 color = titleColor,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = salesMonthCards,
+                                text = "${salesMonth.second} كرت",
                                 color = TextSecondary,
                                 fontSize = 12.sp
                             )
@@ -307,7 +381,7 @@ fun HomeScreen(
                 ) {
                     QuickActionCard(
                         title = "حسابات نقاط البيع",
-                        value = "0",
+                        value = "$accountsCount",
                         subtitle = "حساب",
                         icon = Icons.Outlined.Store,
                         modifier = Modifier.weight(1f),
@@ -330,7 +404,7 @@ fun HomeScreen(
                 ) {
                     QuickActionCard(
                         title = "إدارة الملفات",
-                        value = "0",
+                        value = "0", // TODO: Replace with actual count
                         subtitle = "ملف",
                         icon = Icons.Outlined.DateRange,
                         modifier = Modifier.weight(1f),
@@ -339,7 +413,7 @@ fun HomeScreen(
                     )
                     QuickActionCard(
                         title = "الأرقام المحظورة",
-                        value = "0",
+                        value = "0", // TODO: Replace with actual count
                         subtitle = "رقم",
                         icon = Icons.Outlined.Shield,
                         modifier = Modifier.weight(1f),

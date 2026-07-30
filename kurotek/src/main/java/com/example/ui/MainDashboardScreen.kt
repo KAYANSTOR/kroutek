@@ -149,7 +149,7 @@ fun MainDashboardScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "بائع مباشر (SMS)", 
+                                text = "بائع مباشر (SMS)", 
                                 color = if (!isDistributorModeActive) Color.White else TextSecondary,
                                 fontWeight = if (!isDistributorModeActive) FontWeight.Bold else FontWeight.Medium,
                                 fontSize = 14.sp
@@ -167,7 +167,7 @@ fun MainDashboardScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "موزع الجملة", 
+                                text = "موزع الجملة", 
                                 color = if (isDistributorModeActive) Color.White else TextSecondary,
                                 fontWeight = if (isDistributorModeActive) FontWeight.Bold else FontWeight.Medium,
                                 fontSize = 14.sp
@@ -194,147 +194,154 @@ fun MainDashboardScreen(
                 )
             }
             else {
-        Scaffold(
-            bottomBar = {
-                // Beautiful Custom Bottom Bar matching the screenshots (4 tabs + floating central button)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(68.dp)
-                        .testTag("dashboard_bottom_nav"),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    // White background card with top rounded corners
-                    Surface(
-                        color = Color.White,
-                        tonalElevation = 0.dp,
-                        shadowElevation = 16.dp,
-                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically
+                Scaffold(
+                    bottomBar = {
+                        // Beautiful Custom Bottom Bar matching the screenshots (4 tabs + floating central button)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(68.dp)
+                                .testTag("dashboard_bottom_nav"),
+                            contentAlignment = Alignment.TopCenter
                         ) {
-                            // Left-most Tab: الملف (Settings)
-                            UnifiedBottomNavItem(
-                                selected = selectedTab == 5,
-                                onClick = {
-                                    isCenterMenuOpen = false
-                                    selectedTab = 5
-                                },
-                                icon = Icons.Outlined.Person,
-                                selectedIcon = Icons.Filled.Person,
-                                label = "الملف",
-                                activeColor = BrandPrimaryRed
-                            )
-                            // Left-middle Tab: التقارير (Reports)
-                            UnifiedBottomNavItem(
-                                selected = selectedTab == 4,
-                                onClick = {
-                                    isCenterMenuOpen = false
-                                    selectedTab = 4
-                                },
-                                icon = Icons.Outlined.FormatListBulleted,
-                                selectedIcon = Icons.Filled.FormatListBulleted,
-                                label = "التقارير",
-                                activeColor = BrandPrimaryRed
-                            )
-                            // Center Spacer
-                            Box(modifier = Modifier.weight(1f).fillMaxHeight())
-                            // Right-middle Tab: الخدمات (Services)
-                            UnifiedBottomNavItem(
-                                selected = selectedTab == 1,
-                                onClick = {
-                                    isCenterMenuOpen = false
-                                    selectedTab = 1
-                                },
-                                icon = Icons.Outlined.ShoppingBag,
-                                selectedIcon = Icons.Filled.ShoppingBag,
-                                label = "الخدمات",
-                                activeColor = BrandPrimaryRed
-                            )
-                            // Right-most Tab: الرئيسية (Home)
-                            UnifiedBottomNavItem(
-                                selected = selectedTab == 0,
-                                onClick = {
-                                    isCenterMenuOpen = false
-                                    selectedTab = 0
-                                },
-                                icon = Icons.Outlined.Home,
-                                selectedIcon = Icons.Filled.Home,
-                                label = "الرئيسية",
-                                activeColor = BrandPrimaryRed
-                            )
-                        }
-                    }
+                            // White background card with top rounded corners
+                            Surface(
+                                color = Color.White,
+                                tonalElevation = 0.dp,
+                                shadowElevation = 16.dp,
+                                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Left-most Tab: الملف (Settings)
+                                    UnifiedBottomNavItem(
+                                        selected = selectedTab == 5,
+                                        onClick = {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 5
+                                        },
+                                        icon = Icons.Outlined.Person,
+                                        selectedIcon = Icons.Filled.Person,
+                                        label = "الملف",
+                                        activeColor = BrandPrimaryRed
+                                    )
+                                    // Left-middle Tab: التقارير (Reports)
+                                    UnifiedBottomNavItem(
+                                        selected = selectedTab == 4,
+                                        onClick = {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 4
+                                        },
+                                        icon = Icons.Outlined.FormatListBulleted,
+                                        selectedIcon = Icons.Filled.FormatListBulleted,
+                                        label = "التقارير",
+                                        activeColor = BrandPrimaryRed
+                                    )
+                                    // Center Spacer
+                                    Box(modifier = Modifier.weight(1f).fillMaxHeight())
+                                    // Right-middle Tab: الخدمات (Services)
+                                    UnifiedBottomNavItem(
+                                        selected = selectedTab == 1,
+                                        onClick = {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 1
+                                        },
+                                        icon = Icons.Outlined.ShoppingBag,
+                                        selectedIcon = Icons.Filled.ShoppingBag,
+                                        label = "الخدمات",
+                                        activeColor = BrandPrimaryRed
+                                    )
+                                    // Right-most Tab: الرئيسية (Home)
+                                    UnifiedBottomNavItem(
+                                        selected = selectedTab == 0,
+                                        onClick = {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 0
+                                        },
+                                        icon = Icons.Outlined.Home,
+                                        selectedIcon = Icons.Filled.Home,
+                                        label = "الرئيسية",
+                                        activeColor = BrandPrimaryRed
+                                    )
+                                }
+                            }
 
-                    // Circular Floating Center Menu Button (diameter 64dp, half protruding)
+                            // Circular Floating Center Menu Button (diameter 64dp, half protruding)
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .offset(y = (-32).dp)
+                                    .size(64.dp)
+                                    .shadow(elevation = 12.dp, shape = CircleShape)
+                                    .background(
+                                        color = if (isCenterMenuOpen) Color(0xFF1E293B) else Color(0xFFDC2626),
+                                        shape = CircleShape
+                                    )
+                                    .clickable { isCenterMenuOpen = !isCenterMenuOpen },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isCenterMenuOpen) Icons.Default.Close else Icons.Filled.KeyboardDoubleArrowUp,
+                                    contentDescription = "القائمة",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    },
+                    containerColor = DeepBlack
+                ) { innerPadding ->
                     Box(
                         modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .offset(y = (-32).dp)
-                            .size(64.dp)
-                            .shadow(elevation = 12.dp, shape = CircleShape)
-                            .background(
-                                color = if (isCenterMenuOpen) Color(0xFF1E293B) else Color(0xFFDC2626),
-                                shape = CircleShape
-                            )
-                            .clickable { isCenterMenuOpen = !isCenterMenuOpen },
-                        contentAlignment = Alignment.Center
+                            .fillMaxSize()
+                            .padding(innerPadding)
                     ) {
-                        Icon(
-                            imageVector = if (isCenterMenuOpen) Icons.Default.Close else Icons.Filled.KeyboardDoubleArrowUp,
-                            contentDescription = "القائمة",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
+                         when (selectedTab) {
+                             0 -> HomeScreen(
+                                 authViewModel = authViewModel,
+                                 settingsViewModel = settingsViewModel,
+                                 smsViewModel = smsViewModel,
+                                 inventoryViewModel = inventoryViewModel,
+                                 salesViewModel = salesViewModel,
+                                 onNavigateToCards = { selectedTab = 1 },
+                                 onNavigateToAccounts = { selectedTab = 1 },
+                                 onNavigateToOffers = { selectedTab = 1 },
+                                 onNavigateToReports = { selectedTab = 4 },
+                                 onNavigateToSettings = { selectedTab = 5 }
+                             )
+                             1 -> CardsTab(
+                                 inventoryViewModel = inventoryViewModel,
+                                 salesViewModel = salesViewModel,
+                                 smsViewModel = settingsViewModel,
+                                 mainViewModel = mainViewModel
+                             )
+                             2 -> PendingApprovalsTab(
+                                 dashboardViewModel = dashboardViewModel,
+                                 reportsViewModel = reportsViewModel,
+                                 mainViewModel = mainViewModel
+                             )
+                             3 -> SpecialCustomersTab(
+                                 reportsViewModel = reportsViewModel,
+                                 salesViewModel = salesViewModel,
+                                 mainViewModel = mainViewModel
+                             )
+                             4 -> ReportsTab(
+                                 salesViewModel = salesViewModel,
+                                 dashboardViewModel = dashboardViewModel,
+                                 mainViewModel = mainViewModel
+                             )
+                             5 -> SettingsTab(
+                                 mainViewModel = mainViewModel,
+                                 authViewModel = authViewModel,
+                                 settingsViewModel = settingsViewModel,
+                                 distributorViewModel = distributorViewModel,
+                                 onLogout = onLogout
+                             )
+                         }
                     }
-                }
-            },
-            containerColor = DeepBlack
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                 when (selectedTab) {
-                     0 -> HomeScreen(
-                         onNavigateToCards = { selectedTab = 1 },
-                         onNavigateToAccounts = { selectedTab = 1 },
-                         onNavigateToOffers = { selectedTab = 1 },
-                         onNavigateToReports = { selectedTab = 4 },
-                         onNavigateToSettings = { selectedTab = 5 }
-                     )
-                    1 -> CardsTab(
-                        inventoryViewModel = inventoryViewModel,
-                        salesViewModel = salesViewModel,
-                        smsViewModel = settingsViewModel,
-                        mainViewModel = mainViewModel
-                    )
-                    2 -> PendingApprovalsTab(
-                        dashboardViewModel = dashboardViewModel,
-                        reportsViewModel = reportsViewModel,
-                        mainViewModel = mainViewModel
-                    )
-                    3 -> SpecialCustomersTab(
-                        reportsViewModel = reportsViewModel,
-                        salesViewModel = salesViewModel,
-                        mainViewModel = mainViewModel
-                    )
-                    4 -> ReportsTab(
-                        salesViewModel = salesViewModel,
-                        dashboardViewModel = dashboardViewModel,
-                        mainViewModel = mainViewModel
-                    )
-                    5 -> SettingsTab(
-                        mainViewModel = mainViewModel,
-                        authViewModel = authViewModel,
-                        settingsViewModel = settingsViewModel,
-                        distributorViewModel = distributorViewModel,
-                        onLogout = onLogout
-                    )
                 }
             }
         }
@@ -357,7 +364,7 @@ fun MainDashboardScreen(
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 0.dp)
@@ -366,201 +373,206 @@ fun MainDashboardScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "الوصول السريع والخدمات الإضافية",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                            .padding(24.dp)
                         )
+                        {
+                            Text(
+                                text = "الوصول السريع والخدمات الإضافية",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                            )
 
-                        // Card 1: التفويضات (Approvals)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(100.dp)
-                                    .clickable {
-                                        isCenterMenuOpen = false
-                                        selectedTab = 2
-                                    }
+                            // Card 1: التفويضات (Approvals)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize().padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 2
+                                        }
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Default.DoneAll,
-                                            contentDescription = null,
-                                            tint = BrandPrimaryRed,
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                        if (allPendingApprovals.isNotEmpty()) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .offset(x = 10.dp, y = (-10).dp)
-                                                    .background(BrandPrimaryRed, CircleShape)
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                                            ) {
-                                                Text(
-                                                    text = allPendingApprovals.size.toString(),
-                                                    color = Color.White,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.DoneAll,
+                                                contentDescription = null,
+                                                tint = BrandPrimaryRed,
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                            if (allPendingApprovals.isNotEmpty()) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .offset(x = 10.dp, y = (-10).dp)
+                                                        .background(BrandPrimaryRed, CircleShape)
+                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                ) {
+                                                    Text(
+                                                        text = allPendingApprovals.size.toString(),
+                                                        color = Color.White,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "التفويضات المعلقة",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "التفويضات المعلقة",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
                                 }
                             }
 
                             // Card 2: تبديل إلى وضع الموزع
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                                border = BorderStroke(1.5.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(100.dp)
-                                    .clickable {
-                                        isCenterMenuOpen = false
-                                        distributorViewModel.setDistributorModeActive(true)
-                                        Toast.makeText(context, "تم التبديل إلى نظام الموزع 🏪", Toast.LENGTH_SHORT).show()
-                                    }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize().padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.5.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            distributorViewModel.setDistributorModeActive(true)
+                                            Toast.makeContext(context, "تم التبديل إلى نظام الموزع 🏪", Toast.LENGTH_SHORT).show()
+                                        }
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.SwapHoriz,
-                                        contentDescription = null,
-                                        tint = Color(0xFF10B981),
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "وضع الموزع 🏪",
-                                        color = Color(0xFF10B981),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // Card 3: إضافة كارت (Add Card quick action)
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(100.dp)
-                                    .clickable {
-                                        isCenterMenuOpen = false
-                                        selectedTab = 1
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.SwapHoriz,
+                                            contentDescription = null,
+                                            tint = Color(0xFF10B981),
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "وضع الموزع 🏪",
+                                            color = Color(0xFF10B981),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize().padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AddCard,
-                                        contentDescription = null,
-                                        tint = BrandPrimaryRed,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "إضافة كروت جديدة",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
                                 }
                             }
 
-                            // Card 4: مزامنة وتحديث
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(100.dp)
-                                    .clickable {
-                                        isCenterMenuOpen = false
-                                        selectedTab = 3
-                                    }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize().padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                // Card 3: إضافة كارت (Add Card quick action)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 1
+                                        }
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.People,
-                                        contentDescription = null,
-                                        tint = BrandPrimaryRed,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "العملاء الاستثنائيين",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddCard,
+                                            contentDescription = null,
+                                            tint = BrandPrimaryRed,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "إضافة كروت جديدة",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                // Card 4: مزامنة وتحديث
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(100.dp)
+                                        .clickable {
+                                            isCenterMenuOpen = false
+                                            selectedTab = 3
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.People,
+                                            contentDescription = null,
+                                            tint = BrandPrimaryRed,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "العملاء الاستثنائيين",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
-                        }
 
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                        // Large red rounded Close circular floating button matching the bottom layout precisely
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(Color(0xFF0F172A), CircleShape)
-                                .border(BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)), CircleShape)
-                                .clickable { isCenterMenuOpen = false },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "إغلاق",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            // Large red rounded Close circular floating button matching the bottom layout precisely
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(Color(0xFF0F172A), CircleShape)
+                                    .border(BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)), CircleShape)
+                                    .clickable { isCenterMenuOpen = false },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "إغلاق",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -572,7 +584,7 @@ fun MainDashboardScreen(
         val event = activeEventNotification!!
         val isDark = isDarkTheme
         val shareMessage = "كود كرت الشحن فئة ${event.amount} ر.ي هو:\n${event.cardDetails}"
-        
+
         AlertDialog(
             onDismissRequest = { activeEventNotification = null },
             title = {
@@ -705,8 +717,6 @@ fun MainDashboardScreen(
         )
     }
 }
-
-
 
 @Composable
 fun DashboardMetricItem(
