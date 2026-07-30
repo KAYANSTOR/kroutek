@@ -19,11 +19,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,12 +31,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,7 +45,6 @@ import com.example.ui.theme.BrandPrimary
 import com.example.ui.theme.BrandSurface
 import com.example.ui.theme.BrandSurfaceVariant
 import com.example.ui.theme.TextSecondary
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 
@@ -59,11 +56,7 @@ fun NoInternetScreen(
     modifier: Modifier = Modifier
 ) {
     var showDetails by remember { mutableStateOf(true) }
-
     val isLight = BrandBackground.luminance() > 0.5f
-    val iconBg = if (isLight) Color(0x14EF4444) else Color(0x29EF4444)
-    val iconTint = if (isLight) Color(0xFFEF4444) else Color(0xFFFF6B6B)
-    val cardContainer = if (isLight) BrandSurface else BrandSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -82,13 +75,16 @@ fun NoInternetScreen(
             Box(
                 modifier = Modifier
                     .size(96.dp)
-                    .background(iconBg, CircleShape),
+                    .background(
+                        color = if (isLight) Color(0x14EF4444) else Color(0x29EF4444),
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Wifi,
                     contentDescription = null,
-                    tint = iconTint,
+                    tint = if (isLight) Color(0xFFEF4444) else Color(0xFFFF6B6B),
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -97,7 +93,7 @@ fun NoInternetScreen(
 
             Text(
                 text = "لا يوجد اتصال بالإنترنت",
-                color = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -107,7 +103,7 @@ fun NoInternetScreen(
 
             Text(
                 text = "تأكد من اتصالك بالشبكة ثم حاول مرة أخرى",
-                color = if (isLight) Color(0xFF555555) else TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
@@ -118,8 +114,8 @@ fun NoInternetScreen(
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = cardContainer),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                colors = androidx.compose.material3.CardDefaults.elevatedCardColors(containerColor = BrandSurface),
+                elevation = androidx.compose.material3.CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -130,14 +126,12 @@ fun NoInternetScreen(
                     StatusRow(
                         label = "حالة الشبكة:",
                         value = "غير متصل",
-                        valueColor = iconTint,
-                        isLight = isLight
+                        valueColor = if (isLight) Color(0xFFEF4444) else Color(0xFFFF6B6B)
                     )
                     StatusRow(
                         label = "آخر فحص:",
                         value = "الآن",
-                        valueColor = if (isLight) Color(0xFF444444) else TextSecondary,
-                        isLight = isLight
+                        valueColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -213,7 +207,7 @@ fun NoInternetScreen(
                             text = "جارٍ الاتصال...",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (isLight) Color(0xFF444444) else TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -242,7 +236,7 @@ fun NoInternetScreen(
 }
 
 @Composable
-private fun StatusRow(label: String, value: String, valueColor: Color, isLight: Boolean) {
+private fun StatusRow(label: String, value: String, valueColor: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -250,7 +244,7 @@ private fun StatusRow(label: String, value: String, valueColor: Color, isLight: 
     ) {
         Text(
             text = label,
-            color = if (isLight) Color(0xFF444444) else Color(0xFFB0B0B0),
+            color = TextSecondary,
             fontSize = 13.sp
         )
         Text(
@@ -267,13 +261,13 @@ private fun Bullet(text: String) {
     Row(verticalAlignment = Alignment.Top) {
         Text(
             text = "•",
-            color = if (BrandBackground.luminance() > 0.5f) Color(0xFF444444) else TextSecondary,
+            color = TextSecondary,
             fontSize = 14.sp,
             modifier = Modifier.padding(end = 10.dp, top = 1.dp)
         )
         Text(
             text = text,
-            color = if (BrandBackground.luminance() > 0.5f) Color(0xFF444444) else TextSecondary,
+            color = TextSecondary,
             fontSize = 14.sp,
             lineHeight = 20.sp
         )
