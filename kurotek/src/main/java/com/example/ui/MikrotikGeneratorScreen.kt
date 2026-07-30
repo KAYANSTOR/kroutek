@@ -41,6 +41,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,6 +74,7 @@ fun MikrotikGeneratorScreen(
     val context = LocalContext.current
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    val generatedCards by viewModel.allGeneratedCards.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     val tabs = listOf(
@@ -259,7 +262,7 @@ private fun MikrotikCardsTab(isLight: Boolean, titleColor: Color) {
         ) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(text = "الكروت المتاحة", color = titleColor, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text(text = "0 كرت", color = TextSecondary, fontSize = 12.sp)
+                Text(text = "${generatedCards.size} كرت", color = TextSecondary, fontSize = 12.sp)
             }
             ElevatedCard(
                 onClick = {},
@@ -281,7 +284,7 @@ private fun MikrotikCardsTab(isLight: Boolean, titleColor: Color) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "الكروت", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(text = "0", color = BrandPrimary, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                Text(text = generatedCards.size.toString(), color = BrandPrimary, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
             }
         }
 
@@ -290,10 +293,30 @@ private fun MikrotikCardsTab(isLight: Boolean, titleColor: Color) {
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = BrandSurfaceVariant)
         ) {
-            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(text = "لا توجد كروت حالياً", color = TextSecondary, fontSize = 14.sp)
-                Text(text = "قم بتوليد كروت جديدة من التبويب الأول", color = TextSecondary.copy(alpha = 0.7f), fontSize = 12.sp)
-            }
+if (generatedCards.isEmpty()) {
+                        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(text = "لا توجد كروت حالياً", color = TextSecondary, fontSize = 14.sp)
+                            Text(text = "قم بتوليد كروت جديدة من التبويب الأول", color = TextSecondary.copy(alpha = 0.7f), fontSize = 12.sp)
+                        }
+                    } else {
+                        generatedCards.take(5).forEach { card ->
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(18.dp),
+                                colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
+                            ) {
+                                Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text(text = card.pin, color = titleColor, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text(text = card.username, color = TextSecondary, fontSize = 11.sp)
+                                    }
+                                    OutlinedCard(shape = RoundedCornerShape(12.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)) {
+                                        Text(text = "فئة ${card.category}", color = titleColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
         }
         Spacer(modifier = Modifier.height(12.dp))
     }
