@@ -2,29 +2,56 @@ package com.example.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun MyApplicationTheme(
-    content: @Composable () -> Unit,
+    darkTheme: Boolean = isDarkThemeState.value,
+    content: @Composable () -> Unit
 ) {
-    val dynamicScheme = darkColorScheme(
-        primary = BrandPrimaryRed,
-        secondary = BrandPrimaryDark,
-        tertiary = BrandSecondaryBlue,
-        background = DeepBlack,
-        surface = SurfaceDark,
-        onPrimary = if (isDarkThemeState.value) DeepBlack else PureWhite,
-        onSecondary = if (isDarkThemeState.value) DeepBlack else PureWhite,
-        onTertiary = PureWhite,
-        onBackground = PureWhite,
-        onSurface = PureWhite,
-        surfaceVariant = SurfaceLight,
-        onSurfaceVariant = TextSecondary
-    )
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = DarkBrandPrimary,
+            onPrimary = DarkBrandOnPrimary,
+            secondary = DarkBrandSecondary,
+            onSecondary = DarkBrandOnSecondary,
+            tertiary = DarkBrandTertiary,
+            onTertiary = DarkBrandOnTertiary,
+            background = DarkBrandBackground,
+            onBackground = DarkBrandOnBackground,
+            surface = DarkBrandSurface,
+            onSurface = DarkBrandOnSurface,
+            surfaceVariant = DarkBrandSurfaceVariant,
+            onSurfaceVariant = DarkBrandOnSurfaceVariant,
+            outline = DarkBrandOutline,
+            error = DarkBrandError,
+            errorContainer = DarkBrandErrorContainer
+        )
+    } else {
+        lightColorScheme(
+            primary = LightBrandPrimary,
+            onPrimary = LightBrandOnPrimary,
+            secondary = LightBrandSecondary,
+            onSecondary = LightBrandOnSecondary,
+            tertiary = LightBrandTertiary,
+            onTertiary = LightBrandOnTertiary,
+            background = LightBrandBackground,
+            onBackground = LightBrandOnBackground,
+            surface = LightBrandSurface,
+            onSurface = LightBrandOnSurface,
+            surfaceVariant = LightBrandSurfaceVariant,
+            onSurfaceVariant = LightBrandOnSurfaceVariant,
+            outline = LightBrandOutline,
+            error = LightBrandError,
+            errorContainer = LightBrandErrorContainer
+        )
+    }
 
     MaterialTheme(
-        colorScheme = dynamicScheme,
+        colorScheme = colorScheme,
         typography = Typography,
         content = content
     )
