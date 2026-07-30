@@ -454,8 +454,8 @@ private fun DistributorFinancialsTab(
                 Text(text = "إيداع رأس المال", color = titleColor, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 OutlinedCard(onClick = {}, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("رصيد حالي", color = TextSecondary, fontSize = 12.sp)
-                        Text("0", color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "رصيد حالي", color = TextSecondary, fontSize = 12.sp)
+                        Text(text = capitals.sumOf { it.amount }.toString(), color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 OutlinedCard(onClick = {}, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)) {
@@ -523,7 +523,7 @@ private fun DistributorReportsTab(
                     OutlinedCard(onClick = {}, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text("الأرباح", color = TextSecondary, fontSize = 11.sp)
-                            Text("0", color = Color(0xFF22C55E), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(text = (transactions.sumOf { it.amount } - expenses.sumOf { it.amount }).toString(), color = Color(0xFF22C55E), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     OutlinedCard(onClick = {}, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp), colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)) {
