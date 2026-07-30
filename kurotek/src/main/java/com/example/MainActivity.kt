@@ -39,7 +39,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.network.SyncService
 import com.example.ui.*
-import com.example.ui.activation.ActivationViewModelFactory
+import com.example.ui.ActivationViewModelFactory
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.DeepBlack

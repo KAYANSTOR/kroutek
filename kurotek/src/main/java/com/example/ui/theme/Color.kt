@@ -90,6 +90,17 @@ val DarkCategory300Green = Color(0xFF059669)
 val DarkCategory500Turmeric = Color(0xFFEA580C)
 
 // Light aliases for gradual migration
+val BrandPrimary = LightBrandPrimary
+val BrandOnPrimary = LightBrandOnPrimary
+val BrandSecondary = LightBrandSecondary
+val BrandOnSecondary = LightBrandOnSecondary
+val BrandSurface = LightBrandSurface
+val BrandSurfaceVariant = LightBrandSurfaceVariant
+val BrandBackground = LightBrandBackground
+val BrandOnBackground = LightBrandOnBackground
+val BrandOnSurface = LightBrandOnSurface
+val BrandOnSurfaceVariant = LightBrandOnSurfaceVariant
+val BrandOutline = LightBrandOutline
 val BrandPrimaryRed = LightBrandPrimary
 val BrandPrimaryDark = LightBrandTertiary
 val BrandSecondaryBlue = LightBrandSecondary
