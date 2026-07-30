@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.network.SyncManager
 import dagger.hilt.android.AndroidEntryPoint
-import org.json.JSONObject
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -30,7 +29,6 @@ class SmsReceiver : BroadcastReceiver() {
 
     @Inject
     lateinit var processDepositUseCase: ProcessDepositUseCase
-
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != "android.provider.Telephony.SMS_RECEIVED") return
@@ -62,7 +60,10 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleMessage(context: Context, message: String) {
-        // Only proceed if the service is turned on in settings
+        if (!::repository.isInitialized) {
+            Log.w("SmsReceiver", "repository not injected, skipping SMS")
+            return
+        }
         if (!repository.isServiceEnabled.value) {
             Log.d("SmsReceiver", "Service is disabled. SMS ignored.")
             return

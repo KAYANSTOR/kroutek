@@ -32,11 +32,17 @@ class ActivationViewModel(
     private val _activationKey = MutableStateFlow<String>("")
     val activationKey: StateFlow<String> = _activationKey.asStateFlow()
 
-private val _isTrial = MutableStateFlow(false)
+    private val _isTrial = MutableStateFlow(false)
     val isTrial: StateFlow<Boolean> = _isTrial.asStateFlow()
 
     private val _showKeyField = MutableStateFlow(true)
     val showKeyField: StateFlow<Boolean> = _showKeyField.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String>("")
+    val errorMessage: StateFlow<String> = _errorMessage.asStateFlow()
 
     // Actions for UI events
     fun onTrialSelected(isTrial: Boolean) {
@@ -138,7 +144,7 @@ private val _isTrial = MutableStateFlow(false)
         _networkName.value = ""
         _activationKey.value = ""
         _isTrial.value = false
-        // showKeyField will update automatically via init block
+        _showKeyField.value = true
         _isLoading.value = false
         _errorMessage.value = ""
     }

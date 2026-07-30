@@ -56,7 +56,7 @@ import androidx.compose.ui.platform.testTag
 fun LoginScreen(
     authViewModel: AuthViewModel,
     mainViewModel: MainViewModel,
-    smsViewModel: SettingsViewModel, // This is actually SettingsViewModel despite the name
+    smsViewModel: SmsViewModel,
     onLoginSuccess: () -> Unit = {}
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
