@@ -32,6 +32,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,7 +62,9 @@ fun SpecialCustomersTab(
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     val wallets = listOf("جيب", "جوالي", "كريمي", "حاسب", "ون كاش", "ام فلوس")
+    val transactions by salesViewModel.transactions.collectAsState()
     var selectedWallet by remember { mutableIntStateOf(0) }
+    val customerNames = transactions.map { it.phone }.distinct().take(5)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -311,77 +315,98 @@ fun SpecialCustomersTab(
                                 fontSize = 12.sp
                             )
                         }
-                        Text(
-                            text = "0",
-                            color = BrandPrimary,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+Text(
+                                text = transactions.size.toString(),
+                                color = BrandPrimary,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
                     }
                 }
 
-                listOf(
-                    CustomerData("أحمد جابر", "جيب", "777123456"),
-                    CustomerData("سارة علي", "جوالي", "771234567"),
-                    CustomerData("خالد عمر", "كريمي", "770987654")
-                ).forEach { customer ->
+                if (transactions.isEmpty()) {
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
+                        colors = CardDefaults.elevatedCardColors(containerColor = BrandSurfaceVariant)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "لا يوجد عملاء بعد",
+                                color = TextSecondary,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "ستظهر العملاء بعد إتمام أول عملية بيع",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                } else {
+                    transactions.take(10).forEach { txn ->
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
                         ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .background(
-                                            color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E),
-                                            shape = CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Person,
-                                        contentDescription = null,
-                                        tint = BrandPrimary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .background(
+                                                color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E),
+                                                shape = CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.Person,
+                                            contentDescription = null,
+                                            tint = BrandPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(
+                                            text = txn.walletType.ifEmpty { "عميل"},
+                                            color = titleColor,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = txn.phone,
+                                            color = TextSecondary,
+                                            fontSize = 12.sp
+                                        )
+                                    }
                                 }
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                OutlinedCard(
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)
+                                ) {
                                     Text(
-                                        text = customer.name,
+                                        text = txn.walletType.ifEmpty { "عام"},
                                         color = titleColor,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = customer.phone,
-                                        color = TextSecondary,
-                                        fontSize = 12.sp
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                                     )
                                 }
-                            }
-                            OutlinedCard(
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.outlinedCardColors(containerColor = BrandSurfaceVariant)
-                            ) {
-                                Text(
-                                    text = customer.wallet,
-                                    color = titleColor,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                                )
                             }
                         }
                     }
