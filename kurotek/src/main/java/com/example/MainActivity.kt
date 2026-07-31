@@ -47,6 +47,13 @@ import com.example.ui.theme.SurfaceDark
 import com.example.ui.theme.PureWhite
 import dagger.hilt.android.AndroidEntryPoint
 
+enum class AppScreen {
+    WELCOME,
+    ACTIVATION,
+    MAIN,
+    PIN_LOCK
+}
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
