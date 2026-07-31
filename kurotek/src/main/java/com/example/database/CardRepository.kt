@@ -552,7 +552,7 @@ class CardRepository(val context: Context) {
     // Pending Approvals Access
     fun getAllPendingApprovals(): Flow<List<PendingApproval>> = pendingApprovalDao.getAllPendingApprovals()
 
-    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String) = withContext(Dispatchers.IO) {
+    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String): String = withContext(Dispatchers.IO) {
         val pending = PendingApproval(
             phone = phone,
             amount = amount,
@@ -561,6 +561,7 @@ class CardRepository(val context: Context) {
             depositId = depositId
         )
         pendingApprovalDao.insertPendingApproval(pending)
+        pending.id
     }
 
     suspend fun deletePendingApproval(id: String) = withContext(Dispatchers.IO) {

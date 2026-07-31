@@ -26,8 +26,13 @@ class PendingApprovalReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
-        val pendingId = intent.getIntExtra("pending_id", -1)
+        val pendingId = intent.getStringExtra("pending_id") ?: return
         val notificationId = intent.getIntExtra("notification_id", -1)
+
+        if (!::repository.isInitialized) {
+            Log.w("PendingApprovalReceiver", "repository not injected, skipping action")
+            return
+        }
 
         // Cancel notification close dialog/shade
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -35,7 +40,7 @@ class PendingApprovalReceiver : BroadcastReceiver() {
             notificationManager.cancel(notificationId)
         }
 
-        if (pendingId == -1) return
+        if (pendingId.isBlank()) return
 
         val goAsyncPending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {

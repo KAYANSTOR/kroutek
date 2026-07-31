@@ -456,7 +456,7 @@ fun MainDashboardScreen(
                                         .clickable {
                                             isCenterMenuOpen = false
                                             distributorViewModel.setDistributorModeActive(true)
-                                            Toast.makeContext(context, "تم التبديل إلى نظام الموزع 🏪", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "تم التبديل إلى نظام الموزع 🏪", Toast.LENGTH_SHORT).show()
                                         }
                                 ) {
                                     Column(
