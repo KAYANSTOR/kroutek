@@ -241,8 +241,8 @@ class SmsReceiver : BroadcastReceiver() {
         } else {
             // Manual confirmation mode (requires approval first)
             // Insert Deposit first, then insert PendingApproval linked with its ID
-            val depositId = repository.insertDeposit(recipientPhone, amount, walletType, isShared = false, cardDetails = "معلق بانتظار الموافقة")
-            val pendingId = repository.insertPendingApproval(recipientPhone, amount, walletType, isAccountCode, depositId.toInt()).toInt()
+            val depositId = repository.insertDeposit(recipientPhone, amount, walletType, isShared = false, cardDetails = "معلق بانتظار الموافقة").toString()
+            val pendingId = repository.insertPendingApproval(recipientPhone, amount, walletType, isAccountCode, depositId)
 
             // Sync with cloud backend
             val syncManager = SyncManager(context)

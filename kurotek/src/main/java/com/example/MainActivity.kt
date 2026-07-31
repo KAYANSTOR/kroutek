@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.network.SyncService
 import com.example.ui.*
 import com.example.ui.ActivationViewModelFactory
@@ -233,6 +234,70 @@ private fun SafeAppShell(coreContainer: com.example.core.CoreContainer) {
                     )
                 }
                 AppScreen.MAIN -> {
+                    val safeDistributorViewModel = try {
+                        val factory = DistributorViewModelFactory(coreContainer.cardRepository, coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create DistributorViewModel", e)
+                        null
+                    } as? com.example.ui.DistributorViewModel
+
+                    val safeDashboardViewModel = try {
+                        val factory = DashboardViewModelFactory(coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create DashboardViewModel", e)
+                        null
+                    } as? com.example.ui.DashboardViewModel
+
+                    val safeInventoryViewModel = try {
+                        val factory = InventoryViewModelFactory(coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create InventoryViewModel", e)
+                        null
+                    } as? com.example.ui.InventoryViewModel
+
+                    val safeSalesViewModel = try {
+                        val factory = SalesViewModelFactory(coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create SalesViewModel", e)
+                        null
+                    } as? com.example.ui.SalesViewModel
+
+                    val safeReportsViewModel = try {
+                        val factory = ReportsViewModelFactory(coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create ReportsViewModel", e)
+                        null
+                    } as? com.example.ui.ReportsViewModel
+
+                    val safeWalletViewModel = try {
+                        val factory = WalletViewModelFactory(coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create WalletViewModel", e)
+                        null
+                    } as? com.example.ui.WalletViewModel
+
+                    val safeMikrotikViewModel = try {
+                        val factory = MikrotikViewModelFactory(coreContainer)
+                        viewModel(factory = factory)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to create MikrotikViewModel", e)
+                        null
+                    } as? com.example.ui.MikrotikViewModel
+
+                    if (safeDistributorViewModel == null || safeDashboardViewModel == null ||
+                        safeInventoryViewModel == null || safeSalesViewModel == null ||
+                        safeReportsViewModel == null || safeWalletViewModel == null ||
+                        safeMikrotikViewModel == null) {
+                        SafeErrorScreen(message = "خطأ في تحميل بيانات الشاشة الرئيسية")
+                        return@Box
+                    }
+
                     LaunchedEffect(Unit) {
                         try {
                             com.example.network.SyncService.startService(context)
@@ -244,55 +309,13 @@ private fun SafeAppShell(coreContainer: com.example.core.CoreContainer) {
                         mainViewModel = safeMainViewModel,
                         authViewModel = authViewModel,
                         settingsViewModel = safeSettingsViewModel,
-                        distributorViewModel = try {
-                            val factory = DistributorViewModelFactory(coreContainer.cardRepository, coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create DistributorViewModel", e)
-                            null
-                        } as? com.example.ui.DistributorViewModel,
-                        dashboardViewModel = try {
-                            val factory = DashboardViewModelFactory(coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create DashboardViewModel", e)
-                            null
-                        } as? com.example.ui.DashboardViewModel,
-                        inventoryViewModel = try {
-                            val factory = InventoryViewModelFactory(coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create InventoryViewModel", e)
-                            null
-                        } as? com.example.ui.InventoryViewModel,
-                        salesViewModel = try {
-                            val factory = SalesViewModelFactory(coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create SalesViewModel", e)
-                            null
-                        } as? com.example.ui.SalesViewModel,
-                        reportsViewModel = try {
-                            val factory = ReportsViewModelFactory(coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create ReportsViewModel", e)
-                            null
-                        } as? com.example.ui.ReportsViewModel,
-                        walletViewModel = try {
-                            val factory = WalletViewModelFactory(coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create WalletViewModel", e)
-                            null
-                        } as? com.example.ui.WalletViewModel,
-                        mikrotikViewModel = try {
-                            val factory = MikrotikViewModelFactory(coreContainer)
-                            viewModel(factory = factory)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to create MikrotikViewModel", e)
-                            null
-                        } as? com.example.ui.MikrotikViewModel,
+                        distributorViewModel = safeDistributorViewModel,
+                        dashboardViewModel = safeDashboardViewModel,
+                        inventoryViewModel = safeInventoryViewModel,
+                        salesViewModel = safeSalesViewModel,
+                        reportsViewModel = safeReportsViewModel,
+                        walletViewModel = safeWalletViewModel,
+                        mikrotikViewModel = safeMikrotikViewModel,
                         onLogout = {
                             authViewModel.logout()
                             try {
