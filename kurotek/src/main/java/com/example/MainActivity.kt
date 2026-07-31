@@ -35,6 +35,7 @@ import androidx.compose.ui.text.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.network.SyncService
@@ -62,7 +63,23 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 val context = LocalContext.current
-                val coreContainer = remember { com.example.core.CoreContainer.getInstance(context) }
+                val coreContainer = try {
+                    remember { com.example.core.CoreContainer.getInstance(context) }
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "CoreContainer init failed", e)
+                    null
+                }
+
+                // If CoreContainer fails, show error
+                if (coreContainer == null) {
+                    Box(modifier = Modifier.fillMaxSize().background(DeepBlack), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Text("خطأ في تهيئة التطبيق", color = GoldPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text("تعذر تحميل المكونات الأساسية. أعد تشغيل التطبيق أو اتصل بالدعم.", color = PureWhite, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+                        }
+                    }
+                    return@MyApplicationTheme
+                }
                 
                 // MainViewModel is injected via Hilt
                 val mainViewModel: MainViewModel = hiltViewModel()
@@ -116,6 +133,9 @@ class MainActivity : ComponentActivity() {
                 val isPinEnabled by remember { mutableStateOf(coreContainer.cardRepository.isAppPinEnabled()) }
                 
                 var currentScreen by remember { mutableStateOf(AppScreen.WELCOME) }
+                LaunchedEffect(currentScreen) {
+                    Log.d("MainActivity", "Screen changed to: $currentScreen")
+                }
                 
                 // Check and request run-time SMS & notification permissions
                 val requiredPermissions = remember {
@@ -146,7 +166,7 @@ class MainActivity : ComponentActivity() {
                 
                 // Auto route from/to activation screen and request permissions
                 LaunchedEffect(isActivated, isTrialActive, isInitialLoginDone, isLoggedIn, isPinEnabled, hasSmsPermissions) {
-                    currentScreen = when {
+                    val target = when {
                         isActivated || isTrialActive -> {
                             if (isPinEnabled && !isLoggedIn) AppScreen.PIN_LOCK
                             else if (!isInitialLoginDone) AppScreen.WELCOME
@@ -154,7 +174,10 @@ class MainActivity : ComponentActivity() {
                         }
                         else -> AppScreen.ACTIVATION
                     }
+                    Log.d("MainActivity", "Routing: activated=$isActivated trial=$isTrialActive initialDone=$isInitialLoginDone loggedIn=$isLoggedIn pin=$isPinEnabled perms=$hasSmsPermissions => $target")
+                    currentScreen = target
                     if (currentScreen == AppScreen.MAIN && !hasSmsPermissions) {
+                        Log.d("MainActivity", "Requesting SMS permissions")
                         permissionLauncher.launch(requiredPermissions)
                     }
                 }
