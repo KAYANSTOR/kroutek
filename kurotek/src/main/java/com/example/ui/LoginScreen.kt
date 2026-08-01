@@ -56,15 +56,15 @@ import androidx.compose.ui.platform.testTag
 fun LoginScreen(
     authViewModel: AuthViewModel,
     mainViewModel: MainViewModel,
-    smsViewModel: SmsViewModel,
+    smsViewModel: SmsViewModel? = null,
     onLoginSuccess: () -> Unit = {}
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
-    
-    // Collect network name from SettingsViewModel (which holds the network name)
-    val networkName by smsViewModel.networkName.collectAsStateWithLifecycle()
-    
+
+    val networkName by (smsViewModel?.networkName?.collectAsStateWithLifecycle()
+        ?: androidx.compose.runtime.mutableStateOf("كروت الدحشة"))
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -132,9 +132,8 @@ fun LoginScreen(
                 ) {
                     OutlinedTextField(
                         value = networkName,
-                        onValueChange = {
-                            // Update the ViewModel when user types
-                            smsViewModel.updateNetworkName(it)
+                        onValueChange = { newName ->
+                            smsViewModel?.updateNetworkName(newName)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -156,11 +155,8 @@ fun LoginScreen(
                         onClick = {
                             val trimmed = networkName.trim()
                             if (trimmed.isEmpty()) {
-                                // Show error - in a real app we might have error state in ViewModel
-                                // For now, we'll just not proceed if empty
                                 return@TextButton
                             }
-                            // Proceed with login
                             authViewModel.setInitialLoginDone(true)
                             onLoginSuccess()
                         },
