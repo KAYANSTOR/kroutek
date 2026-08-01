@@ -192,46 +192,15 @@ private fun SafeAppShell(coreContainer: com.example.core.CoreContainer) {
         return
     }
 
-    var currentScreen by remember { mutableStateOf(AppScreen.WELCOME) }
-    LaunchedEffect(currentScreen) {
-        Log.d("MainActivity", "SafeAppShell screen: $currentScreen")
-    }
-
-    val requiredPermissions = remember {
-        val permissions = mutableListOf(
-            Manifest.permission.RECEIVE_SMS,
-            Manifest.permission.READ_SMS,
-            Manifest.permission.SEND_SMS
-        )
-        if (android.os.Build.VERSION.SDK_INT >= 33) {
-            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        permissions.toTypedArray()
-    }
-    
-    var hasSmsPermissions by remember {
-        mutableStateOf(
-            requiredPermissions.all {
-                ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-            }
-        )
-    }
-    
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissionsResult ->
-        hasSmsPermissions = permissionsResult.values.all { it }
-    }
-
-    var safeMainViewModel = mainViewModel
-    var safeSettingsViewModel = settingsViewModel
-    var safeSmsViewModel = smsViewModel
-
-    if (safeMainViewModel == null || safeSettingsViewModel == null) {
-        Log.e("STARTUP", "STEP 7 FAILED: safeMainViewModel=${safeMainViewModel != null} safeSettingsViewModel=${safeSettingsViewModel != null}")
+    if (mainViewModel == null || settingsViewModel == null || smsViewModel == null) {
+        Log.e("STARTUP", "STEP 7 FAILED: mainViewModel=${mainViewModel != null} settingsViewModel=${settingsViewModel != null} smsViewModel=${smsViewModel != null}")
         SafeErrorScreen(message = "خطأ في تحميل الإعدادات")
         return
     }
+
+    val safeMainViewModel = mainViewModel
+    val safeSettingsViewModel = settingsViewModel
+    val safeSmsViewModel = smsViewModel
 
     val isDarkTheme by safeMainViewModel.isDarkTheme.collectAsState()
     LaunchedEffect(isDarkTheme) {
