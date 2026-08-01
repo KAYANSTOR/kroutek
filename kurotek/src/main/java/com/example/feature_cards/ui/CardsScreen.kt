@@ -416,7 +416,7 @@ fun CardsTab(
             contentColor = Color.Black
         ) {
             Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(22.dp))
-        )
+        }
     }
 }
 
