@@ -290,25 +290,32 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         fun getDatabase(context: Context): AppDatabase {
-            Log.e("STARTUP", "STEP 3a: AppDatabase.getDatabase() START")
+            Log.e("STARTUP", "STEP 3a START: AppDatabase.getDatabase() called")
             return INSTANCE ?: synchronized(this) {
-                Log.e("STARTUP", "STEP 3a: AppDatabase.getDatabase() building database START")
+                Log.e("STARTUP", "STEP 3a MID: AppDatabase.getDatabase() synchronized block entered")
                 try {
+                    Log.e("STARTUP", "STEP 3a MID: AppDatabase.getDatabase() building database...")
                     val instance = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         "dahsha_database"
                     )
-                    .addMigrations(MIGRATION_6_7, MIGRATION_8_9)
-                    .fallbackToDestructiveMigration()
-                    .build()
-                    Log.e("STARTUP", "STEP 3a: AppDatabase.getDatabase() building database SUCCESS")
+                        .addMigrations(MIGRATION_6_7, MIGRATION_8_9)
+                        .fallbackToDestructiveMigration()
+                        .build()
+                    Log.e("STARTUP", "STEP 3a MID: AppDatabase.getDatabase() build SUCCESS")
                     INSTANCE = instance
                     instance
                 } catch (e: Throwable) {
-                    Log.e("STARTUP", "STEP 3a FAILED: AppDatabase.getDatabase() build", e)
+                    Log.e("STARTUP", "STEP 3a FAILED: AppDatabase.getDatabase() build threw ${e.javaClass.name}: ${e.message}", e)
                     throw e
                 }
+            }.also {
+                Log.e("STARTUP", "STEP 3a END: AppDatabase.getDatabase() returning instance")
+            }
+        }
+            }.also {
+                Log.e("STARTUP", "STEP 3a END: AppDatabase.getDatabase() returning instance")
             }
         }
     }
