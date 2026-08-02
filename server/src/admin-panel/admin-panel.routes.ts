@@ -34,7 +34,7 @@ function gatewayAuth(req: Request, res: Response, next: NextFunction): void {
 // السلوك المقصود على الأرجح) في هذه المرحلة تحديداً لأنها ترحيل 1:1 بحت.
 // يجب اتخاذ قرار صريح من صاحب المشروع لتفعيل gatewayAuth أدناه، لأن هذا
 // تغيير سلوك حقيقي (سيطلب اسم مستخدم/كلمة مرور لم تكن مطلوبة سابقاً).
-adminPanelRouter.get('/', (_req: Request, res: Response) => {
+adminPanelRouter.get('/', gatewayAuth, (_req: Request, res: Response) => {
   const parentPath = path.join(__dirname, '..', '..', '..', 'admin_panel.html');
   const localPath = path.join(__dirname, '..', '..', 'admin_panel.html');
   if (fs.existsSync(parentPath)) {

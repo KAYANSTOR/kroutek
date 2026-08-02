@@ -12,7 +12,7 @@ import com.example.core.security.SecurityEngine
 object NetworkModule {
 
     // Base URL لخادم Kurotek TypeScript/Node.js (server/src/) — ليس Go، انظر ADR-004 المُحدَّث
-    const val BASE_URL = "https://api.kurotek.app/"
+    const val BASE_URL = "https://ais-pre-bvdkylqpiyfucmy4weqlim-209955469332.europe-west3.run.app/"
 
     fun provideNetworkConfig(enableLogging: Boolean = false) = NetworkConfig(
         baseUrl = BASE_URL,

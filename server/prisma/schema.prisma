@@ -43,7 +43,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -108,7 +108,7 @@ model License {
   durationMonths  Int       @default(12) @map("duration_months")
   startDate       DateTime  @map("start_date")
   endDate         DateTime  @map("end_date")
-  status          LicenseStatus @default(UNUSED)
+  status          String @default("UNUSED")
   notes           String?
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -119,12 +119,6 @@ model License {
   @@map("licenses")
 }
 
-enum LicenseStatus {
-  UNUSED
-  ACTIVE
-  EXPIRED
-  REVOKED
-}
 
 model SecurityLog {
   id             String   @id @default(uuid())
@@ -260,9 +254,9 @@ model DistributorCustomer {
   id              String    @id // نفس الـ UUID المُولَّد على التطبيق أصلاً
   accountId       String    @map("account_id")
   name            String
-  totalSales      Decimal   @default(0) @map("total_sales") @db.Decimal(14, 2)
-  totalPayments   Decimal   @default(0) @map("total_payments") @db.Decimal(14, 2)
-  currentBalance  Decimal   @default(0) @map("current_balance") @db.Decimal(14, 2)
+  totalSales      Decimal   @default(0) @map("total_sales") 
+  totalPayments   Decimal   @default(0) @map("total_payments") 
+  currentBalance  Decimal   @default(0) @map("current_balance") 
   createdAt       DateTime  @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
@@ -279,7 +273,7 @@ model DistributorTransaction {
   customerId String    @map("customer_id")
   date       DateTime
   type       String // "sale" | "payment"
-  amount     Decimal   @db.Decimal(14, 2)
+  amount     Decimal   
   notes      String    @default("")
   updatedAt  DateTime  @updatedAt @map("updated_at")
   deletedAt  DateTime? @map("deleted_at")
@@ -294,7 +288,7 @@ model DistributorExpense {
   id          String    @id
   accountId   String    @map("account_id")
   category    String
-  amount      Decimal   @db.Decimal(14, 2)
+  amount      Decimal   
   description String    @default("")
   date        DateTime
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -310,7 +304,7 @@ model DistributorCapital {
   id          String    @id
   accountId   String    @map("account_id")
   type        String // "deposit" | "withdraw"
-  amount      Decimal   @db.Decimal(14, 2)
+  amount      Decimal   
   description String    @default("")
   date        DateTime
   updatedAt   DateTime  @updatedAt @map("updated_at")
