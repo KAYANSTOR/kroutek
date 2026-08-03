@@ -1,0 +1,106 @@
+package com.example.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.example.core.CoreContainer
+import com.example.core.model.Resource
+import com.example.models.PendingApproval
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+/**
+ * DashboardViewModel
+ * مسؤول عن:
+ * - إحصائيات اللوحة الرئيسية (مبيعات اليوم، عدد الموافقات المعلقة، المخزون المنخفض)
+ * - إدارة الموافقات المعلقة عبر ApprovePendingUseCase
+ */
+class DashboardViewModel(private val coreContainer: CoreContainer) : ViewModel() {
+
+    private val dashboardRepo = coreContainer.dashboardRepository
+    private val approvalsRepo = coreContainer.approvalsRepository
+
+    // ─────────────────────────────────────────────
+    // إحصائيات اللوحة الرئيسية (StateFlows)
+    // ─────────────────────────────────────────────
+
+    val pendingApprovalsCount: StateFlow<Int> = approvalsRepo.observePendingApprovals()
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val pendingApprovals: StateFlow<List<PendingApproval>> = approvalsRepo.observePendingApprovals()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // ─────────────────────────────────────────────
+    // قبول الموافقة — يُفوَّض إلى ApprovePendingUseCase
+    // ─────────────────────────────────────────────
+
+    fun approvePending(pendingId: String, onResult: (success: Boolean, message: String) -> Unit) {
+        viewModelScope.launch {
+            val pending = approvalsRepo.getPendingApproval(pendingId)
+            if (pending == null) {
+                onResult(false, "الطلب غير موجود")
+                return@launch
+            }
+
+            val result = coreContainer.sellCardUseCase(
+                phone = pending.phone,
+                amount = pending.amount,
+                walletType = pending.walletType,
+                onSmsSend = { recipient, msg ->
+                    // Dummy for now or pass appropriate context
+                    true
+                }
+            )
+
+            if (result is Resource.Success) {
+                approvalsRepo.deletePendingApproval(pendingId)
+                val payload = """{"phone":"${pending.phone}","amount":${pending.amount},"walletType":"${pending.walletType}"}"""
+                coreContainer.syncTransactionsUseCase(payload)
+                onResult(true, "تم قبول الطلب وإرسال الكرت بنجاح")
+            } else {
+                onResult(false, (result as? Resource.Error)?.message ?: "حدث خطأ غير معروف")
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // رفض الموافقة — يُسجَّل كمعاملة مرفوضة
+    // ─────────────────────────────────────────────
+
+    fun rejectPending(pendingId: String) {
+        viewModelScope.launch {
+            val pending = approvalsRepo.getPendingApproval(pendingId) ?: return@launch
+            coreContainer.salesRepository.insertTransaction(
+                phone = pending.phone,
+                amount = pending.amount,
+                cardCode = "تم رفض الطلب يدوياً من قِبل المشرف",
+                walletType = pending.walletType
+            )
+            approvalsRepo.deletePendingApproval(pendingId)
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // تحديث رقم هاتف الموافقة المعلقة
+    // ─────────────────────────────────────────────
+
+    fun updatePendingApprovalPhone(pendingId: String, newPhone: String) {
+        viewModelScope.launch {
+            approvalsRepo.updatePendingPhone(pendingId, newPhone)
+        }
+    }
+}
+
+class DashboardViewModelFactory(private val coreContainer: CoreContainer) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return DashboardViewModel(coreContainer) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

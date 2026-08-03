@@ -1,0 +1,34 @@
+{
+  "name": "kayansoft-security-backend",
+  "version": "1.0.0",
+  "description": "Secure Serial Activation Server and Admin Panel",
+  "main": "server/api_server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev:ts": "tsx watch server/src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "build:ts": "tsc -p tsconfig.json",
+    "start:ts": "node dist/server/src/server.js",
+    "prisma:generate": "prisma generate --schema=server/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=server/prisma/schema.prisma",
+    "prisma:seed": "tsx server/prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.18.1",
+    "prisma": "^5.22.0",
+    "tsx": "^4.23.1",
+    "typescript": "^5.0.0"
+  }
+}

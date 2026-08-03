@@ -1,0 +1,48 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: Regenerate Gradle Wrapper
+      run: gradle wrapper
+      
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Build Debug APK
+      run: ./gradlew :kurotek:assembleDebug
+      
+    - name: Zip Server Directory
+      run: |
+        # Zip the server folder so users can download and run it easily
+        zip -r backend-server.zip server/ package.json tsconfig.json admin_panel.html -x "server/node_modules/*" "server/dist/*" "node_modules/*" "dist/*"
+        
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "latest"
+        name: "Latest Build (App & Server)"
+        files: |
+          kurotek/build/outputs/apk/debug/kurotek-debug.apk
+          backend-server.zip
+        prerelease: true

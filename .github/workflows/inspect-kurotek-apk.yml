@@ -1,0 +1,53 @@
+name: Inspect Kurotek APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      apk_url:
+        description: 'Direct URL to the APK (defaults to the release asset URL)'
+        required: false
+        default: 'https://github.com/KAYANSTOR/kroutek/releases/download/v0.0.1-debug-202608012148/kurotek-debug.apk'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        run: |
+          APK_URL="${{ github.event.inputs.apk_url }}"
+          echo "Downloading APK from: $APK_URL"
+          curl -L "$APK_URL" -o kurotek-debug.apk
+          ls -lh kurotek-debug.apk || true
+
+      - name: Basic file info
+        run: |
+          echo "--- file(kurotek-debug.apk) ---" > apk-inspect.txt
+          file kurotek-debug.apk >> apk-inspect.txt
+          echo "" >> apk-inspect.txt
+          echo "--- head (first 512 bytes in hex) ---" >> apk-inspect.txt
+          hexdump -C -n 512 kurotek-debug.apk >> apk-inspect.txt || true
+          echo "" >> apk-inspect.txt
+
+      - name: List APK contents (unzip -l)
+        run: |
+          echo "--- unzip -l output ---" >> apk-inspect.txt
+          unzip -l kurotek-debug.apk >> apk-inspect.txt || true
+
+      - name: Show AndroidManifest (AXML) if possible
+        run: |
+          echo "--- try to extract AndroidManifest.xml (raw) ---" >> apk-inspect.txt
+          unzip -p kurotek-debug.apk AndroidManifest.xml | head -c 4096 >> apk-inspect.txt || echo "AndroidManifest.xml not found in APK (or binary AXML)" >> apk-inspect.txt
+
+      - name: Gather classes and native libs
+        run: |
+          echo "--- classes and libs summary ---" >> apk-inspect.txt
+          unzip -l kurotek-debug.apk | egrep 'classes.*dex|\.so$' >> apk-inspect.txt || true
+
+      - name: Upload inspection artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kurotek-apk-inspection
+          path: apk-inspect.txt
