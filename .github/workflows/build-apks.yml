@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً من واجهة GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -31,8 +31,17 @@ jobs:
     - name: Build Kurotek APK (كروتك)
       run: ./gradlew :kurotek:assembleDebug
 
+    - name: Build Serial App APK (تطبيق السيريالات)
+      run: ./gradlew :app:assembleDebug
+
     - name: Upload Kurotek APK
       uses: actions/upload-artifact@v4
       with:
         name: Kurotek-App-APK
         path: kurotek/build/outputs/apk/debug/kurotek-debug.apk
+
+    - name: Upload Serial App APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Serial-App-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
