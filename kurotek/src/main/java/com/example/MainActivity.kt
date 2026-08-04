@@ -3,11 +3,13 @@ package com.example
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,6 +42,8 @@ import com.example.ui.theme.DeepBlack
 import com.example.ui.theme.SurfaceDark
 import com.example.ui.theme.PureWhite
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 enum class AppScreen {
     WELCOME,
@@ -53,7 +57,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        com.example.core.work.WorkScheduler.scheduleAllWorkers(applicationContext)
+        // ⚠️ إصلاح جذري: كان هذا الاستدعاء متزامناً وحاجزاً على الخيط الرئيسي
+        // قبل setContent مباشرة. أول استدعاء لـ WorkManager.getInstance()
+        // يُنشئ قاعدة بيانات Room داخلية خاصة بـ WorkManager نفسه (عملية I/O
+        // حقيقية على القرص) وينفّذ 3 عمليات enqueueUniquePeriodicWork، كل هذا
+        // قبل ظهور أي واجهة إطلاقاً — وهو المرجَّح بدليل الكود ليكون سبب
+        // "يتأخر التطبيق ثانية ثم ينهار بلا عرض أي شيء": أي استثناء هنا كان
+        // يُسقط التطبيق قبل أن يصل لـ setContent بالمرة. الآن: يعمل على خيط
+        // IO خلفي بعد بدء التطبيق فعلياً (لا يؤخر أول إطار)، ومحصّن بالكامل —
+        // فشل جدولة العمال الدوريين لا يجب أبداً أن يُسقط التطبيق بأكمله.
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                com.example.core.work.WorkScheduler.scheduleAllWorkers(applicationContext)
+            } catch (e: Exception) {
+                Log.e("MainActivity", "فشلت جدولة WorkManager (غير حرج، التطبيق يستمر بالعمل بدونها)", e)
+            }
+        }
         setContent {
             MyApplicationTheme {
                 val context = LocalContext.current
@@ -174,10 +193,15 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             AppScreen.ACTIVATION -> {
-                                ActivationScreenV2(
-                                    onActivationSuccess = {
-                                        authViewModel.validateLicenseFromServer()
-                                    }
+                                // ⚠️ استُبدلت مؤقتاً بـ ActivationScreenV2 في commit سابق (bebdba6) —
+                                // أُعيدت لـ ActivationScreen الحقيقية لأن V2 تتجاهل السيريال الذي
+                                // يكتبه المستخدم بالكامل وتستدعي validateLicenseFromServer() بلا
+                                // معامل (تفحص فقط حالة تجربة تلقائية/ترخيص محفوظ سابقاً، لا ما أُدخل
+                                // للتو) — هذا كان يُبطل تفعيل أي عميل حقيقي بسيريال مدفوع فعلياً.
+                                // ActivationScreen (V1) تستدعي SecurityApiService.validateSerial
+                                // فعلياً بالسيريال المُدخَل وتُفعّل فقط عند نجاح حقيقي من السيرفر.
+                                ActivationScreen(
+                                    authViewModel = authViewModel
                                 )
                             }
                             AppScreen.PIN_LOCK -> {
