@@ -57,17 +57,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 val context = LocalContext.current
+                val app = context.applicationContext as KurotekApplication
+                val coreContainer = app.coreContainer
                 
-                val coreContainer = remember { com.example.core.CoreContainer.getInstance(context) }
-                
-                // MainViewModel is injected via Hilt
+                // ViewModels initialization
                 val mainViewModel: MainViewModel = hiltViewModel()
 
                 val authFactory = remember { AuthViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val authViewModel: com.example.ui.AuthViewModel = viewModel(factory = authFactory)
 
                 val smsFactory = remember { SmsViewModelFactory(coreContainer.cardRepository, coreContainer) }
-                // SmsViewModel is kept for background SMS processing service only
                 @Suppress("UNUSED_VARIABLE")
                 val smsViewModel: com.example.ui.SmsViewModel = viewModel(factory = smsFactory)
 
@@ -77,7 +76,6 @@ class MainActivity : ComponentActivity() {
                 val distFactory = remember { DistributorViewModelFactory(coreContainer.cardRepository, coreContainer) }
                 val distributorViewModel: com.example.ui.DistributorViewModel = viewModel(factory = distFactory)
 
-                // New Clean Architecture ViewModels
                 val dashboardFactory = remember { DashboardViewModelFactory(coreContainer) }
                 val dashboardViewModel: com.example.ui.DashboardViewModel = viewModel(factory = dashboardFactory)
 
@@ -136,8 +134,8 @@ class MainActivity : ComponentActivity() {
                     hasSmsPermissions = permissionsResult.values.all { it }
                 }
 
-                // Auto route from/to activation screen and request permissions
-                LaunchedEffect(isActivated, isTrialActive, isInitialLoginDone, isLoggedIn, isPinEnabled, hasSmsPermissions) {
+                // Auto route logic
+                LaunchedEffect(isActivated, isTrialActive, isInitialLoginDone, isLoggedIn, isPinEnabled) {
                     currentScreen = when {
                         isActivated || isTrialActive -> {
                             if (isPinEnabled && !isLoggedIn) AppScreen.PIN_LOCK
@@ -146,6 +144,10 @@ class MainActivity : ComponentActivity() {
                         }
                         else -> AppScreen.ACTIVATION
                     }
+                }
+
+                // Separate effect for permissions to avoid infinite loops
+                LaunchedEffect(currentScreen) {
                     if (currentScreen == AppScreen.MAIN && !hasSmsPermissions) {
                         permissionLauncher.launch(requiredPermissions)
                     }
@@ -168,23 +170,29 @@ class MainActivity : ComponentActivity() {
                                     authViewModel = authViewModel,
                                     mainViewModel = mainViewModel,
                                     smsViewModel = settingsViewModel,
-                                    onLoginSuccess = {} // Routing is handled by LaunchedEffect
+                                    onLoginSuccess = { /* Handled by state change */ }
                                 )
                             }
                             AppScreen.ACTIVATION -> {
-                                ActivationScreen(
-                                    authViewModel = authViewModel
+                                ActivationScreenV2(
+                                    onActivationSuccess = {
+                                        authViewModel.validateLicenseFromServer()
+                                    }
                                 )
                             }
                             AppScreen.PIN_LOCK -> {
                                 PinLockScreen(
                                     authViewModel = authViewModel,
-                                    onUnlocked = { /* Logged in via VM */ }
+                                    onUnlocked = { /* Handled by state change */ }
                                 )
                             }
                             AppScreen.MAIN -> {
                                 LaunchedEffect(Unit) {
-                                    try {  } catch (e: Exception) { android.util.Log.e("MainActivity", "Failed to start SyncService", e) }
+                                    try { 
+                                        SyncService.startService(context) 
+                                    } catch (e: Exception) { 
+                                        android.util.Log.e("MainActivity", "Failed to start SyncService", e) 
+                                    }
                                 }
                                 MainDashboardScreen(
                                     mainViewModel = mainViewModel,
@@ -198,16 +206,16 @@ class MainActivity : ComponentActivity() {
                                     walletViewModel = walletViewModel,
                                     mikrotikViewModel = mikrotikViewModel,
                                     onLogout = {
-                                        authViewModel.logout() // خروج من الجلسة فقط، لا تمسح isActivated
-                                        
+                                        authViewModel.logout()
+                                        SyncService.stopService(context)
                                     }
                                 )
                             }
                         }
 
-                        // Display custom permission notice if logged in but permissions are missing
+                        // Permission Notice
                         AnimatedVisibility(
-                            visible = isActivated && !hasSmsPermissions,
+                            visible = (isActivated || isTrialActive) && !hasSmsPermissions && currentScreen == AppScreen.MAIN,
                             enter = fadeIn(),
                             exit = fadeOut()
                         ) {
@@ -235,7 +243,6 @@ class MainActivity : ComponentActivity() {
                                             tint = GoldPrimary,
                                             modifier = Modifier.size(56.dp)
                                         )
-
                                         Text(
                                             text = "مطلوب صلاحيات الرسائل SMS",
                                             fontWeight = FontWeight.Bold,
@@ -244,7 +251,6 @@ class MainActivity : ComponentActivity() {
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         )
-
                                         Text(
                                             text = "لكي يتمكن تطبيق كروت الدحشة من قراءة وتصفية رسائل الإشعارات الواردة وتحديداً من محفظة 'جيب' ومحفظة 'جوالي' وتوزيع كروت الشحن تلقائياً لعملائك، يتطلب منح الهاتف صلاحية قراءة واستقبال وإرسال رسائل SMS.",
                                             fontSize = 14.sp,
@@ -253,7 +259,6 @@ class MainActivity : ComponentActivity() {
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         )
-
                                         Button(
                                             onClick = {
                                                 permissionLauncher.launch(requiredPermissions)
