@@ -15,7 +15,12 @@ object WorkScheduler {
     private const val RETRY_WORK_NAME = "RetryFailedTasksWork"
 
     fun scheduleAllWorkers(context: Context) {
-        val workManager = WorkManager.getInstance(context)
+        val workManager = try {
+            WorkManager.getInstance(context)
+        } catch (e: Exception) {
+            android.util.Log.e("WorkScheduler", "WorkManager not initialized yet, skipping scheduling: ${e.message}")
+            return
+        }
 
         // 1. المزامنة الدورية كل 15 دقيقة (أقل وقت مسموح به في WorkManager)
         val syncConstraints = Constraints.Builder()

@@ -29,11 +29,11 @@ class KurotekApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        // جدولة كل الـ Workers الدورية (مزامنة كل 15 دقيقة، تحقق ترخيص كل
-        // 24 ساعة، إعادة محاولة كل ساعة) — كانت هذه الملفات موجودة سابقاً
-        // (core/work/*.kt) لكن غير مربوطة بأي مكان فعلياً، فلم تكن تعمل
-        // إطلاقاً رغم وجودها. ExistingPeriodicWorkPolicy.KEEP بداخل
-        // WorkScheduler يضمن عدم إعادة الجدولة إن كانت مجدولة مسبقاً، لذا
-        // استدعاؤها في كل onCreate آمن ولا يكرر العمل.
+        try {
+            // جدولة كل الـ Workers الدورية عند انطلاق التطبيق لضمان استمرارية العمل في الخلفية
+            WorkScheduler.scheduleAllWorkers(this)
+        } catch (e: Exception) {
+            android.util.Log.e("KurotekApplication", "فشل في جدولة المهام الخلفية: ${e.message}")
+        }
     }
 }
