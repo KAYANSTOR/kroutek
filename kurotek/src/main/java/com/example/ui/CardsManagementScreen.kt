@@ -30,9 +30,6 @@ import com.example.ui.theme.*
 @Composable
 fun CardsManagementScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToCategories: () -> Unit
-) {
-    onNavigateBack: () -> Unit,
     onNavigateToCategories: () -> Unit,
     onShowImportOptions: () -> Unit,
     onShowAddCardOptions: () -> Unit

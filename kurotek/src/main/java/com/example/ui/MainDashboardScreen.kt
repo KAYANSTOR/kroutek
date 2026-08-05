@@ -814,3 +814,5 @@ fun DashboardMetricItem(
         }
     }
 }
+}
+}

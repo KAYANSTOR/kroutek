@@ -93,9 +93,6 @@ fun AppNavigation() {
         composable("CardsManagement") {
             CardsManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToCategories = { navController.navigate("CategoriesManagement") }
-            )
-        },
                 onNavigateToCategories = { navController.navigate("CategoriesManagement") },
                 onShowImportOptions = { /* Handle bottom sheet */ },
                 onShowAddCardOptions = { /* Handle bottom sheet */ }
