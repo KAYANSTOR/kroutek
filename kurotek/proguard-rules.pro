@@ -1,19 +1,21 @@
-# Keep Application class and Hilt generated base class
+# Keep Application class and Hilt generated base class - CRITICAL FOR STARTUP
 -keep class com.example.KurotekApplication { *; }
 -keep class com.example.Hilt_KurotekApplication { *; }
 -keep class * extends android.app.Application { *; }
+-keep class * extends androidx.multidex.MultiDexApplication { *; }
+
+# Keep all classes referenced from AndroidManifest
+-keep class com.example.KurotekApplication { *; }
+-keep class com.example.MainActivity { *; }
+-keep class com.example.receiver.SmsReceiver { *; }
+-keep class com.example.receiver.PendingApprovalReceiver { *; }
+-keep class com.example.network.SyncService { *; }
 
 # Keep Hilt generated classes
 -keep class dagger.hilt.** { *; }
 -keep class com.example.**_HiltComponents.* { *; }
 -keep class com.example.**_Factory { *; }
 -keep class com.example.**_MemberInjector { *; }
-
-# Keep all classes referenced from AndroidManifest
--keep class com.example.MainActivity { *; }
--keep class com.example.receiver.SmsReceiver { *; }
--keep class com.example.receiver.PendingApprovalReceiver { *; }
--keep class com.example.network.SyncService { *; }
 
 # Keep ViewModel factories
 -keep class * extends androidx.lifecycle.ViewModel { *; }
