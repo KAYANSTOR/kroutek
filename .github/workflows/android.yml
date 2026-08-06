@@ -39,6 +39,20 @@ jobs:
         # Zip the server folder so users can download and run it easily
         zip -r backend-server.zip server/ package.json tsconfig.json admin_panel.html -x "server/node_modules/*" "server/dist/*" "node_modules/*" "dist/*"
         
+    - name: Upload Kurotek APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: kurotek-debug-apk
+        path: kurotek/build/outputs/apk/debug/*.apk
+        retention-days: 30
+
+    - name: Upload Serial App APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug-apk
+        path: app/build/outputs/apk/debug/*.apk
+        retention-days: 30
+
     - name: Create Release
       if: github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v2
