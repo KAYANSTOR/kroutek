@@ -34,6 +34,11 @@ android {
   }
 
   buildTypes {
+    debug {
+      isMinifyEnabled = false
+      isShrinkResources = false
+      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    }
     release {
       isCrunchPngs = false
       isMinifyEnabled = true
@@ -43,9 +48,6 @@ android {
       if (releaseSigningConfig != null && (releaseSigningConfig.storeFile ?: file("missing")).exists()) {
         signingConfig = releaseSigningConfig
       }
-    }
-    debug {
-      // Use default debug signing config
     }
   }
   compileOptions {
