@@ -2,6 +2,7 @@ package com.example
 
 import android.app.Application
 import android.util.Log
+import androidx.annotation.Keep
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.example.core.CoreContainer
@@ -10,6 +11,7 @@ import com.example.core.work.WorkScheduler
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
+@Keep
 class KurotekApplication : Application(), Configuration.Provider {
 
     init {
