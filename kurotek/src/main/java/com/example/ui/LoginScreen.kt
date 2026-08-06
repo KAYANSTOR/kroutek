@@ -63,7 +63,7 @@ fun LoginScreen(
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
 
     val networkName by (smsViewModel?.networkName?.collectAsStateWithLifecycle()
-        ?: androidx.compose.runtime.mutableStateOf("كروت الدحشة"))
+        ?: remember { androidx.compose.runtime.mutableStateOf("كروت الدحشة") })
 
     Box(
         modifier = Modifier
