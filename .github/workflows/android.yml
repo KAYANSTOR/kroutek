@@ -32,10 +32,10 @@ jobs:
       run: ./gradlew clean
       
     - name: Build Kurotek Debug APK
-      run: ./gradlew :kurotek:assembleDebug
+      run: ./gradlew :kurotek:assembleDebug --rerun-tasks
        
     - name: Build Serial App Debug APK
-      run: ./gradlew :app:assembleDebug
+      run: ./gradlew :app:assembleDebug --rerun-tasks
       
     - name: Zip Server Directory
       run: |
