@@ -106,14 +106,14 @@ export async function getDashboardData() {
   ]);
 
   return {
-    clients: accounts.map((a: any) => ({
+    clients: accounts.map((a) => ({
       id: a.id,
       name: a.name,
       network_name: a.networkName,
       phone: a.phone,
       notes: a.notes,
     })),
-    serials: licenses.map((l: any) => ({
+    serials: licenses.map((l) => ({
       id: l.id,
       client_id: l.accountId,
       serial_key: l.serialKey,
@@ -124,7 +124,7 @@ export async function getDashboardData() {
       status: l.status,
       notes: l.notes,
     })),
-    logs: logs.map((log: any) => ({
+    logs: logs.map((log) => ({
       id: log.id,
       ip: log.ipAddress,
       endpoint: log.endpoint,

@@ -1,6 +1,7 @@
 package com.example.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -289,17 +290,32 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         fun getDatabase(context: Context): AppDatabase {
+            Log.e("STARTUP", "STEP 3a START: AppDatabase.getDatabase() called")
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "dahsha_database"
-                )
-                .addMigrations(MIGRATION_6_7, MIGRATION_8_9)
-                .fallbackToDestructiveMigration()
-                .build()
-                INSTANCE = instance
-                instance
+                Log.e("STARTUP", "STEP 3a MID: AppDatabase.getDatabase() synchronized block entered")
+                try {
+                    Log.e("STARTUP", "STEP 3a MID: AppDatabase.getDatabase() building database...")
+                    val instance = Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        "dahsha_database"
+                    )
+                        .addMigrations(MIGRATION_6_7, MIGRATION_8_9)
+                        .fallbackToDestructiveMigration()
+                        .build()
+                    Log.e("STARTUP", "STEP 3a MID: AppDatabase.getDatabase() build SUCCESS")
+                    INSTANCE = instance
+                    instance
+                } catch (e: Throwable) {
+                    Log.e("STARTUP", "STEP 3a FAILED: AppDatabase.getDatabase() build threw ${e.javaClass.name}: ${e.message}", e)
+                    throw e
+                }
+            }.also {
+                Log.e("STARTUP", "STEP 3a END: AppDatabase.getDatabase() returning instance")
+            }
+        }
+            }.also {
+                Log.e("STARTUP", "STEP 3a END: AppDatabase.getDatabase() returning instance")
             }
         }
     }

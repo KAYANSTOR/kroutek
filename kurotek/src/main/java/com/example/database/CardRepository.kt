@@ -2,6 +2,7 @@ package com.example.database
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.models.Card
@@ -15,7 +16,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class CardRepository(val context: Context) {
-    private val database = AppDatabase.getDatabase(context)
+    init {
+        Log.e("STARTUP", "STEP 3: CardRepository constructor START")
+    }
+
+    private val database = try {
+        Log.e("STARTUP", "STEP 3a: CardRepository.AppDatabase.getDatabase() START")
+        val db = AppDatabase.getDatabase(context)
+        Log.e("STARTUP", "STEP 3a: CardRepository.AppDatabase.getDatabase() SUCCESS")
+        db
+    } catch (e: Throwable) {
+        Log.e("STARTUP", "STEP 3a FAILED: CardRepository.AppDatabase.getDatabase()", e)
+        throw e
+    }
+
     private val cardDao = database.cardDao()
     private val transactionDao = database.transactionDao()
     private val pendingApprovalDao = database.pendingApprovalDao()
@@ -25,6 +39,7 @@ class CardRepository(val context: Context) {
     private val distributorDao = database.distributorDao()
     
     private val sharedPrefs: SharedPreferences = try {
+        Log.e("STARTUP", "STEP 3b: CardRepository.EncryptedSharedPreferences START")
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -37,8 +52,12 @@ class CardRepository(val context: Context) {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
     } catch (e: Throwable) {
-        // Fallback for corrupted keystore or unsupported devices
+        Log.e("STARTUP", "STEP 3b WARNING: CardRepository EncryptedSharedPreferences failed, using fallback", e)
         context.getSharedPreferences("dahsha_prefs", Context.MODE_PRIVATE)
+    }
+
+    init {
+        Log.e("STARTUP", "STEP 3: CardRepository constructor END")
     }
 
     companion object {
@@ -552,7 +571,7 @@ class CardRepository(val context: Context) {
     // Pending Approvals Access
     fun getAllPendingApprovals(): Flow<List<PendingApproval>> = pendingApprovalDao.getAllPendingApprovals()
 
-    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String) = withContext(Dispatchers.IO) {
+    suspend fun insertPendingApproval(phone: String, amount: Int, walletType: String, isAccountCode: Boolean, depositId: String): String = withContext(Dispatchers.IO) {
         val pending = PendingApproval(
             phone = phone,
             amount = amount,
@@ -561,6 +580,7 @@ class CardRepository(val context: Context) {
             depositId = depositId
         )
         pendingApprovalDao.insertPendingApproval(pending)
+        pending.id
     }
 
     suspend fun deletePendingApproval(id: String) = withContext(Dispatchers.IO) {

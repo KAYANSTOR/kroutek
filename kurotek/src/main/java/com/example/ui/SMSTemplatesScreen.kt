@@ -1,6 +1,5 @@
 package com.example.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,14 +17,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,7 +53,7 @@ import androidx.compose.ui.platform.testTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RejectedMessagesScreen(
+fun SMSTemplatesScreen(
     onBackClick: () -> Unit = {}
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
@@ -62,21 +64,21 @@ fun RejectedMessagesScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(BrandBackground)
-            .testTag("rejected_messages_screen")
+            .testTag("sms_templates_screen")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = "الرسائل المرفوضة",
+                            text = "قوالب رسائل العملاء والعروض",
                             color = titleColor,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Right
                         )
                         Text(
-                            text = "مراجعة وتحليل الرسائل المرفوضة",
+                            text = "تخصيص وإدارة قوالب رسائل SMS",
                             color = TextSecondary,
                             fontSize = 12.sp,
                             textAlign = TextAlign.Right
@@ -86,15 +88,6 @@ fun RejectedMessagesScreen(
                 navigationIcon = {
                     TextButton(onClick = onBackClick) {
                         Text(text = "إغلاق", color = TextSecondary, fontSize = 14.sp)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.FilterList,
-                            contentDescription = null,
-                            tint = titleColor
-                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -114,15 +107,15 @@ fun RejectedMessagesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    RejectedTab(
-                        label = "لا يوجد مخزون كروت",
+                    TemplateTab(
+                        label = "قوالب رسائل العملاء",
                         selected = selectedTab.intValue == 0,
                         onClick = { selectedTab.intValue = 0 },
                         isLight = isLight,
                         modifier = Modifier.weight(1f)
                     )
-                    RejectedTab(
-                        label = "فشل إرسال الكود للعميل",
+                    TemplateTab(
+                        label = "قوالب رسائل العروض",
                         selected = selectedTab.intValue == 1,
                         onClick = { selectedTab.intValue = 1 },
                         isLight = isLight,
@@ -130,69 +123,47 @@ fun RejectedMessagesScreen(
                     )
                 }
 
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = BrandSurfaceVariant)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (selectedTab.intValue == 0)
-                                    "إجمالي الرسائل المرفوضة\n4 رسالة مرفوضة"
-                                else
-                                    "إجمالي الأخطاء\n2 خطأ",
-                                color = titleColor,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                lineHeight = 20.sp
-                            )
-                        }
-                        LinearProgressIndicator(
-                            progress = { 0.35f },
-                            modifier = Modifier
-                                .fillMaxWidth(0.45f)
-                                .height(6.dp),
-                            color = Color(0xFFFF6B6B),
-                            trackColor = if (isLight) Color(0xFFE5E7EB) else Color(0xFF27272A)
-                        )
-                    }
-                }
+                TemplateCardSms(
+                    title = "الترحاب (عام)",
+                    content = "شكراً على استخدامك خدماتنا.\nكود الكرت: 1234567\nفئة: 10 ريـ",
+                    status = "نشط",
+                    statusColor = Color(0xFF10B981),
+                    isLight = isLight
+                )
+                TemplateCardSms(
+                    title = "الترحاب (حسب الشبكة)",
+                    content = "شكراً على استخدامك شبكة كيان تك.\nكود الكرت: 1234567\nفئة: 10 ريـ",
+                    status = "نشط",
+                    statusColor = Color(0xFF10B981),
+                    isLight = isLight
+                )
+                TemplateCardSms(
+                    title = "قالب العروض الأسبوعية",
+                    content = "عرض خاص هذا الأسبوع فقط\nخصم يصل إلى 20%",
+                    status = "غير نشط",
+                    statusColor = Color(0xFFEF4444),
+                    isLight = isLight
+                )
 
-                RejectedMessageCard(
-                    title = "طلب تعبئة كرت 500",
-                    subtitle = "العميل: 777123456",
-                    description = "لا يوجد مخزون كروت 500",
-                    borderColor = Color(0xFFFF6B6B),
-                    isLight = isLight
-                )
-                RejectedMessageCard(
-                    title = "طلب تعبئة كرت 200",
-                    subtitle = "العميل: 771234567",
-                    description = "فشل إرسال الكود",
-                    borderColor = Color(0xFFF59E0B),
-                    isLight = isLight
-                )
-                RejectedMessageCard(
-                    title = "طلب تعبئة كرت 100",
-                    subtitle = "العميل: 770987654",
-                    description = "القالب غير مطابق للشبكة",
-                    borderColor = Color(0xFFEF4444),
-                    isLight = isLight
-                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
+        }
+
+        FloatingActionButton(
+            onClick = {},
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp),
+            containerColor = BrandPrimary,
+            contentColor = Color.Black
+        ) {
+            Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(22.dp))
         }
     }
 }
 
 @Composable
-private fun RejectedTab(
+private fun TemplateTab(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -220,7 +191,7 @@ private fun RejectedTab(
             if (selected) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
+                        .fillMaxWidth(0.85f)
                         .height(3.dp)
                         .background(BrandPrimary, CircleShape)
                 )
@@ -230,24 +201,23 @@ private fun RejectedTab(
 }
 
 @Composable
-private fun RejectedMessageCard(
+private fun TemplateCardSms(
     title: String,
-    subtitle: String,
-    description: String,
-    borderColor: Color,
+    content: String,
+    status: String,
+    statusColor: Color,
     isLight: Boolean
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface),
-        enabled = false
+        colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -258,36 +228,47 @@ private fun RejectedMessageCard(
                     text = title,
                     color = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(
-                            color = borderColor.copy(alpha = 0.15f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
-                        tint = borderColor,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    SurfaceStatusPill(text = status, color = statusColor, isLight = isLight)
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Outlined.MoreVert,
+                            contentDescription = null,
+                            tint = TextSecondary
+                        )
+                    }
                 }
             }
             Text(
-                text = subtitle,
-                color = TextSecondary,
-                fontSize = 12.sp
-            )
-            Text(
-                text = description,
+                text = content,
                 color = if (isLight) Color(0xFF444444) else TextSecondary,
                 fontSize = 13.sp,
                 lineHeight = 18.sp
             )
         }
+    }
+}
+
+@Composable
+private fun SurfaceStatusPill(text: String, color: Color, isLight: Boolean) {
+    ElevatedCard(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = color.copy(alpha = if (isLight) 0.12f else 0.18f)
+        )
+    ) {
+        Text(
+            text = text,
+            color = color,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+        )
     }
 }

@@ -1,6 +1,5 @@
 package com.example.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,14 +17,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,7 +51,7 @@ import androidx.compose.ui.platform.testTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RejectedMessagesScreen(
+fun WalletsAndPOSScreen(
     onBackClick: () -> Unit = {}
 ) {
     val isLight = BrandBackground.luminance() > 0.5f
@@ -62,21 +62,21 @@ fun RejectedMessagesScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(BrandBackground)
-            .testTag("rejected_messages_screen")
+            .testTag("wallets_pos_screen")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = "الرسائل المرفوضة",
+                            text = "إدارة المحافظ ونقاط البيع",
                             color = titleColor,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Right
                         )
                         Text(
-                            text = "مراجعة وتحليل الرسائل المرفوضة",
+                            text = "إعداد وتفعيل المحافظ ونقاط البيع المرتبطة بالرسائل",
                             color = TextSecondary,
                             fontSize = 12.sp,
                             textAlign = TextAlign.Right
@@ -86,15 +86,6 @@ fun RejectedMessagesScreen(
                 navigationIcon = {
                     TextButton(onClick = onBackClick) {
                         Text(text = "إغلاق", color = TextSecondary, fontSize = 14.sp)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.FilterList,
-                            contentDescription = null,
-                            tint = titleColor
-                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -110,26 +101,6 @@ fun RejectedMessagesScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    RejectedTab(
-                        label = "لا يوجد مخزون كروت",
-                        selected = selectedTab.intValue == 0,
-                        onClick = { selectedTab.intValue = 0 },
-                        isLight = isLight,
-                        modifier = Modifier.weight(1f)
-                    )
-                    RejectedTab(
-                        label = "فشل إرسال الكود للعميل",
-                        selected = selectedTab.intValue == 1,
-                        onClick = { selectedTab.intValue = 1 },
-                        isLight = isLight,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -138,68 +109,100 @@ fun RejectedMessagesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (selectedTab.intValue == 0)
-                                    "إجمالي الرسائل المرفوضة\n4 رسالة مرفوضة"
-                                else
-                                    "إجمالي الأخطاء\n2 خطأ",
-                                color = titleColor,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                lineHeight = 20.sp
-                            )
-                        }
-                        LinearProgressIndicator(
-                            progress = { 0.35f },
-                            modifier = Modifier
-                                .fillMaxWidth(0.45f)
-                                .height(6.dp),
-                            color = Color(0xFFFF6B6B),
-                            trackColor = if (isLight) Color(0xFFE5E7EB) else Color(0xFF27272A)
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = null,
+                            tint = TextSecondary
+                        )
+                        Text(
+                            text = "ابحث باسم المورد أو المعرف...",
+                            color = TextSecondary,
+                            fontSize = 14.sp
                         )
                     }
                 }
 
-                RejectedMessageCard(
-                    title = "طلب تعبئة كرت 500",
-                    subtitle = "العميل: 777123456",
-                    description = "لا يوجد مخزون كروت 500",
-                    borderColor = Color(0xFFFF6B6B),
-                    isLight = isLight
-                )
-                RejectedMessageCard(
-                    title = "طلب تعبئة كرت 200",
-                    subtitle = "العميل: 771234567",
-                    description = "فشل إرسال الكود",
-                    borderColor = Color(0xFFF59E0B),
-                    isLight = isLight
-                )
-                RejectedMessageCard(
-                    title = "طلب تعبئة كرت 100",
-                    subtitle = "العميل: 770987654",
-                    description = "القالب غير مطابق للشبكة",
-                    borderColor = Color(0xFFEF4444),
-                    isLight = isLight
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    WalletTab(
+                        label = "المحافظ",
+                        selected = selectedTab.intValue == 0,
+                        onClick = { selectedTab.intValue = 0 },
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
+                    WalletTab(
+                        label = "نقاط البيع",
+                        selected = selectedTab.intValue == 1,
+                        onClick = { selectedTab.intValue = 1 },
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                if (selectedTab.intValue == 0) {
+                    WalletItemCard(
+                        title = "جيب",
+                        description = "محفظة إلكترونية — معرف المورد: JIB",
+                        status = "مفعّل",
+                        statusColor = Color(0xFF10B981),
+                        isLight = isLight
+                    )
+                    WalletItemCard(
+                        title = "جوالي",
+                        description = "محفظة إلكترونية — معرف المورد: MWALI",
+                        status = "معطّل",
+                        statusColor = Color(0xFFEF4444),
+                        isLight = isLight
+                    )
+                } else {
+                    WalletItemCard(
+                        title = "نقطة بيع كيان تك",
+                        description = "رمز التاجر: 773303455",
+                        status = "نشط",
+                        statusColor = Color(0xFF10B981),
+                        isLight = isLight
+                    )
+                    WalletItemCard(
+                        title = "نقطة بيع الفرع الثاني",
+                        description = "رمز التاجر: 773303456",
+                        status = "غير نشط",
+                        statusColor = Color(0xFFEF4444),
+                        isLight = isLight
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(80.dp))
             }
+        }
+
+        FloatingActionButton(
+            onClick = {},
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp),
+            containerColor = BrandPrimary,
+            contentColor = Color.Black
+        ) {
+            Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(22.dp))
         }
     }
 }
 
 @Composable
-private fun RejectedTab(
+private fun WalletTab(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
     isLight: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
     TextButton(
         onClick = onClick,
         modifier = modifier,
@@ -213,14 +216,14 @@ private fun RejectedTab(
             Text(
                 text = label,
                 color = if (selected) BrandPrimary else TextSecondary,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                 textAlign = TextAlign.Center
             )
             if (selected) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
+                        .fillMaxWidth(0.75f)
                         .height(3.dp)
                         .background(BrandPrimary, CircleShape)
                 )
@@ -230,64 +233,63 @@ private fun RejectedTab(
 }
 
 @Composable
-private fun RejectedMessageCard(
+private fun WalletItemCard(
     title: String,
-    subtitle: String,
     description: String,
-    borderColor: Color,
+    status: String,
+    statusColor: Color,
     isLight: Boolean
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface),
-        enabled = false
+        colors = CardDefaults.elevatedCardColors(containerColor = BrandSurface)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = title,
                     color = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(
-                            color = borderColor.copy(alpha = 0.15f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                Text(
+                    text = description,
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+
+            ElevatedCard(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = statusColor.copy(alpha = if (isLight) 0.12f else 0.18f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
-                        tint = borderColor,
-                        modifier = Modifier.size(18.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(statusColor, CircleShape)
+                    )
+                    Text(
+                        text = status,
+                        color = statusColor,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-            Text(
-                text = subtitle,
-                color = TextSecondary,
-                fontSize = 12.sp
-            )
-            Text(
-                text = description,
-                color = if (isLight) Color(0xFF444444) else TextSecondary,
-                fontSize = 13.sp,
-                lineHeight = 18.sp
-            )
         }
     }
 }
