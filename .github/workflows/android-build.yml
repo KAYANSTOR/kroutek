@@ -75,30 +75,11 @@ jobs:
       - name: Build debug APK
         run: ./gradlew :kurotek:assembleDebug --stacktrace --no-daemon
 
-      - name: Build release APK if secrets are available
-        if: secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_PASSWORD != ''
-        run: |
-          mkdir -p keystore
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/upload.jks
-          echo "KEYSTORE_PATH=${{ github.workspace }}/keystore/upload.jks" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-          echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
-          ./gradlew :kurotek:assembleRelease --stacktrace --no-daemon
-
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: kurotek-debug-apk
           path: kurotek/build/outputs/apk/debug/*.apk
-          retention-days: 30
-
-      - name: Upload release APK if built
-        if: secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_PASSWORD != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: kurotek-release-apk
-          path: kurotek/build/outputs/apk/release/*.apk
           retention-days: 30
 
       - name: Upload build reports
@@ -129,11 +110,3 @@ jobs:
             kurotek/build/reports/tests/**/*
           retention-days: 30
 
-      - name: Upload mapping file if release built
-        if: secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_PASSWORD != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: kurotek-release-mapping
-          path: |
-            kurotek/build/outputs/mapping/release/mapping.txt
-          retention-days: 30
