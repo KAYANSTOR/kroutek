@@ -33,6 +33,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,8 +64,9 @@ fun LoginScreen(
     val isLight = BrandBackground.luminance() > 0.5f
     val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
 
-    val networkName by (smsViewModel?.networkName?.collectAsStateWithLifecycle()
-        ?: remember { androidx.compose.runtime.mutableStateOf("كروت الدحشة") })
+    // Prefer ViewModel-backed StateFlow with an explicit initialValue to avoid creating state unremembered in composition.
+    val networkState = smsViewModel?.networkName?.collectAsStateWithLifecycle(initialValue = "كروت الدحشة")
+    val networkName by (networkState ?: rememberSaveable { androidx.compose.runtime.mutableStateOf("كروت الدحشة") })
 
     Box(
         modifier = Modifier
