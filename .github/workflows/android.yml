@@ -28,9 +28,12 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
+    - name: Clean build cache
+      run: ./gradlew clean
+      
     - name: Build Kurotek Debug APK
       run: ./gradlew :kurotek:assembleDebug
-      
+       
     - name: Build Serial App Debug APK
       run: ./gradlew :app:assembleDebug
       
