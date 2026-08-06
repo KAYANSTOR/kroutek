@@ -1,6 +1,26 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.kts.
+# Keep Application class and Hilt generated base class
+-keep class com.example.KurotekApplication { *; }
+-keep class com.example.Hilt_KurotekApplication { *; }
+-keep class * extends android.app.Application { *; }
+
+# Keep Hilt generated classes
+-keep class dagger.hilt.** { *; }
+-keep class com.example.**_HiltComponents.* { *; }
+-keep class com.example.**_Factory { *; }
+-keep class com.example.**_MemberInjector { *; }
+
+# Keep all classes referenced from AndroidManifest
+-keep class com.example.MainActivity { *; }
+-keep class com.example.receiver.SmsReceiver { *; }
+-keep class com.example.receiver.PendingApprovalReceiver { *; }
+-keep class com.example.network.SyncService { *; }
+
+# Keep ViewModel factories
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+-keep class * extends androidx.lifecycle.ViewModelProvider.Factory { *; }
+
+# Keep Room entities
+-keep class com.example.models.** { *; }
 
 # Keep Retrofit interfaces
 -keep interface com.example.security.SecurityApi { *; }
@@ -9,27 +29,12 @@
 -keep class com.squareup.moshi.** { *; }
 -keep @com.squareup.moshi.JsonQualifier @interface * {}
 
-# Keep Room entities
--keep class com.example.models.** { *; }
-
-# Keep Hilt generated classes
--keep class dagger.hilt.** { *; }
--keep class com.example.**_HiltComponents.* { *; }
--keep class com.example.**_Factory { *; }
-
-# Keep ViewModel factories
--keep class * extends androidx.lifecycle.ViewModel { *; }
--keep class * extends androidx.lifecycle.ViewModelProvider.Factory { *; }
-
 # Keep WorkManager workers
 -keep class com.example.core.work.** { *; }
 
 # Keep SecurityEngine object
 -keep class com.example.core.security.SecurityEngine { *; }
 -keep class com.example.core.engine.security.SecurityEngine { *; }
-
-# Keep Application class
--keep class com.example.KurotekApplication { *; }
 
 # Remove logging in release
 -assumenosideeffects class android.util.Log {
