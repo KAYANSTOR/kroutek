@@ -3,6 +3,7 @@ package com.example
 import android.app.Application
 import android.util.Log
 import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.example.core.CoreContainer
 import com.example.core.work.KurotekWorkerFactory
 import com.example.core.work.WorkScheduler
@@ -44,14 +45,6 @@ class KurotekApplication : Application(), Configuration.Provider {
         }
 
         try {
-            Log.e("STARTUP", "STEP 3 START: WorkScheduler.scheduleAllWorkers()")
-            WorkScheduler.scheduleAllWorkers(this)
-            Log.e("STARTUP", "STEP 3 END: WorkScheduler.scheduleAllWorkers() SUCCESS")
-        } catch (e: Throwable) {
-            Log.e("STARTUP", "STEP 3 FAILED: WorkScheduler.scheduleAllWorkers()", e)
-        }
-
-        try {
             Log.e("STARTUP", "STEP 3b START: WorkManager manual initialize")
             WorkManager.initialize(
                 this,
@@ -63,6 +56,14 @@ class KurotekApplication : Application(), Configuration.Provider {
             Log.e("STARTUP", "STEP 3b END: WorkManager manual initialize SUCCESS")
         } catch (e: Throwable) {
             Log.e("STARTUP", "STEP 3b FAILED: WorkManager manual initialize", e)
+        }
+
+        try {
+            Log.e("STARTUP", "STEP 3 START: WorkScheduler.scheduleAllWorkers()")
+            WorkScheduler.scheduleAllWorkers(this)
+            Log.e("STARTUP", "STEP 3 END: WorkScheduler.scheduleAllWorkers() SUCCESS")
+        } catch (e: Throwable) {
+            Log.e("STARTUP", "STEP 3 FAILED: WorkScheduler.scheduleAllWorkers()", e)
         }
 
         Log.e("STARTUP", "STEP 1 END: KurotekApplication.onCreate()")
