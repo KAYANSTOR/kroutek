@@ -4,7 +4,6 @@ import { rateLimiter } from './middleware/rateLimiter';
 import { authRouter } from './auth/auth.routes';
 import { licenseRouter } from './license/license.routes';
 import { adminPanelRouter } from './admin-panel/admin-panel.routes';
-import { syncRouter } from './sync/sync.routes';
 
 export function createApp() {
   const app = express();
@@ -16,7 +15,6 @@ export function createApp() {
   // نفس مسارات api_server.js تماماً: /api/v1/serial/*, /api/v1/admin/*
   app.use('/api/v1', licenseRouter);
   app.use('/api/v1/admin', authRouter);
-  app.use('/api/v1/sync', syncRouter);
   app.use('/', adminPanelRouter);
 
   // JSON API Status endpoint (منقول 1:1)

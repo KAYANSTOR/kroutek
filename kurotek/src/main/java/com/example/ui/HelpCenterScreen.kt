@@ -1,389 +1,333 @@
 package com.example.ui
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.BrandBackground
+import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.BrandSurface
+import com.example.ui.theme.BrandSurfaceVariant
+import com.example.ui.theme.TextSecondary
+import androidx.compose.ui.platform.testTag
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpCenterScreen(
     onBackClick: () -> Unit = {}
 ) {
-    var expandedSections by remember { mutableStateOf(setOf<String>()) }
+    val isLight = BrandBackground.luminance() > 0.5f
+    val titleColor = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF)
+    val divider = if (isLight) Color(0xFFE5E7EB) else Color(0xFF2E2E33)
+    val sectionBg = if (isLight) BrandSurface else BrandSurfaceVariant
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A1A))
+            .background(BrandBackground)
             .testTag("help_center_screen")
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 80.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF222222))
-                    .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "مركز المساعدة",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                Text(
+                    text = "مركز المساعدة",
+                    color = titleColor,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable { onBackClick() }
+                        tint = titleColor
                     )
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = sectionBg)
             ) {
-                // Section 1: مرحباً بك في Z Net
-                HelpSection(
-                    sectionId = "section_1",
-                    title = "مرحباً بك في Z Net",
-                    icon = Icons.Outlined.Info,
-                    expandedSections = expandedSections,
-                    onToggle = { sectionId ->
-                        expandedSections = if (expandedSections.contains(sectionId)) {
-                            expandedSections - sectionId
-                        } else {
-                            expandedSections + sectionId
-                        }
-                    },
-                    content = listOf(
-                        "مفهوم وأهداف النظام",
-                        "دورة العمل الكاملة",
-                        "مزايا الاشتراك الشهري",
-                        "نقاط البيع والعمليات"
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = null,
+                        tint = TextSecondary
                     )
-                )
+                    Text(
+                        text = "ابحث في مركز المساعدة",
+                        color = TextSecondary,
+                        fontSize = 14.sp
+                    )
+                }
+            }
 
-                // Section 2: تهيئة التطبيق والترخيص
-                HelpSection(
-                    sectionId = "section_2",
-                    title = "تهيئة التطبيق والترخيص",
-                    icon = Icons.Outlined.Settings,
-                    expandedSections = expandedSections,
-                    onToggle = { sectionId ->
-                        expandedSections = if (expandedSections.contains(sectionId)) {
-                            expandedSections - sectionId
-                        } else {
-                            expandedSections + sectionId
-                        }
-                    },
-                    content = listOf(
-                        "التنشيط الأول وصيانة الجهاز",
-                        "النسخة التجريبية وباقات التفعيل",
-                        "فترة السماح والتعطيل التلقائي",
-                        "عملية التفعيل خطوة بخطوة"
-                    )
-                )
+            HelpSection(
+                title = "مرحباً بك في Z Net",
+                icon = Icons.Outlined.Info,
+                items = listOf(
+                    "مفهوم وأهداف النظام",
+                    "دورة العمل الكاملة",
+                    "مزايا الاشتراك الشهري",
+                    "نقاط البيع والعمليات"
+                ),
+                isLight = isLight,
+                description = "هذا التطبيق هو نظام ذكي لأتمتة مبيعات كروت الإنترنت عبر قراءة رسائل SMS من محافظ الدفع اليمنية، مع واجهة سهلة الاستخدام، تفعيل عبر ترخيص مرتبط بالجهاز، ونسخة تجريبية مجانية لمدة 7 أيام."
+            )
+            HelpSection(
+                title = "مفهوم النظام وأهدافه",
+                icon = Icons.Outlined.Info,
+                items = listOf(
+                    "كيف يعمل زد نت",
+                    "الجهوزية والثبات",
+                    "حماية التراخيص",
+                    "خدمة العملاء"
+                ),
+                isLight = isLight,
+                description = "نظام Z Net يهدف إلى تبسيط عملية بيع كروت الإنترنت وإدارة المحافظ الإلكترونية من خلال واجهة موحدة، مع التركيز على الثبات، حماية التراخيص، ودعم العملاء."
+            )
+            HelpSection(
+                title = "دورة العمل الكاملة",
+                icon = Icons.Outlined.BarChart,
+                items = listOf(
+                    "من إيداع العميل حتى الترحيل",
+                    "القوالب والردود التلقائية",
+                    "نظام الأقساط والمتابعة",
+                    "التقارير اليومية"
+                ),
+                isLight = isLight,
+                description = "تبدأ العملية عند استلام رسالة إيداع من العميل عبر SMS، ويقوم النظام بتحليل الرسالة، خصم الكرت تلقائياً، وإرسال رد للعميل، مع تسجيل العملية وتقارير يومية تلقائية."
+            )
+            HelpSection(
+                title = "تهيئة التطبيق والترخيص",
+                icon = Icons.Outlined.Settings,
+                items = listOf(
+                    "التنشيط الأول وصيانة الجهاز",
+                    "النسخة التجريبية والاشتراكات",
+                    "فترة السماح والتعطيل التلقائي",
+                    "عملية التفعيل خطوة بخطوة"
+                ),
+                isLight = isLight,
+                description = "يتطلب التطبيق تفعيلاً أولياً عبر إدخال مفتاح الترخيص أو تفعيل نسخة تجريبية مجانية. الترخيص مرتبط بالجهاز، ويتيح لك الاستفادة من اشتراكات شهرية مع إمكانية التجربة المجانية لمدة 7 أيام."
+            )
+            HelpSection(
+                title = "إدارة العملاء والمشتركين",
+                icon = Icons.Outlined.People,
+                items = listOf(
+                    "المعرفات المتعددة للمشترك",
+                    "دمج الحسابات وتوحيد السجلات",
+                    "قائمة العملاء المحظورين",
+                    "المستحقات والرصيد"
+                ),
+                isLight = isLight,
+                description = "يمكنك إدارة بيانات العملاء، تعدد المعرفات لكل مشترك، توحيد السجلات، وتتبع المستحقات المالية والرصيد بسهولة من خلال واجهة موحدة."
+            )
+            HelpSection(
+                title = "فئات الخروج ومستودع المخزون",
+                icon = Icons.Outlined.Warehouse,
+                items = listOf(
+                    "إعداد الفئات المالية والعمولة",
+                    "الاستيراد الجماعي للمخزون",
+                    "منع البيع المرجوع والحجز الدائم",
+                    "مستويات الكروت والكميات"
+                ),
+                isLight = isLight,
+                description = "يتيح لك هذا القسم إعداد فئات الكروت المالية، ضبط العمولة، استيراد مخزون جديد بشكل جماعي، منع البيع المرجوع والحجز الدائم، ومتابعة مستويات الكروت والكميات المتوفرة بدقة."
+            )
+            HelpSection(
+                title = "نقاط البيع والتسويات والتحصيل",
+                icon = Icons.Outlined.Store,
+                items = listOf(
+                    "حسابات نقاط البيع والتراكم",
+                    "تسجيل التسويات المالية",
+                    "تصدير وبيع كشف الحساب",
+                    "إغلاق الحسابات وتصفية المبالغ"
+                ),
+                isLight = isLight,
+                description = "تُدار نقاط البيع بشكل كامل من خلال إدارة الحسابات، تسجيل التسويات المالية، تصدير وبيع كشوفات الحساب، وإغلاق الحسابات مع تصفية المبالغ المتبقية بسهولة."
+            )
 
-                // Section 3: لوحة التحكم وإحصائيات التشغيل
-                HelpSection(
-                    sectionId = "section_3",
-                    title = "لوحة التحكم وإحصائيات التشغيل",
-                    icon = Icons.Outlined.BarChart,
-                    expandedSections = expandedSections,
-                    onToggle = { sectionId ->
-                        expandedSections = if (expandedSections.contains(sectionId)) {
-                            expandedSections - sectionId
-                        } else {
-                            expandedSections + sectionId
-                        }
-                    },
-                    content = listOf(
-                        "مراقبة الخدمة في الخلفية",
-                        "مؤشرات المبيعات والمخزون",
-                        "عرض التقارير المتقدمة",
-                        "تصدير البيانات والإحصائيات"
-                    )
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                // Section 4: إدارة العملاء والمشتركين
-                HelpSection(
-                    sectionId = "section_4",
-                    title = "إدارة العملاء والمشتركين",
-                    icon = Icons.Outlined.People,
-                    expandedSections = expandedSections,
-                    onToggle = { sectionId ->
-                        expandedSections = if (expandedSections.contains(sectionId)) {
-                            expandedSections - sectionId
-                        } else {
-                            expandedSections + sectionId
-                        }
-                    },
-                    content = listOf(
-                        "المعرفات المتعددة للمشترك",
-                        "دمج الحسابات وتوحيد السجلات",
-                        "قائمة السوداء للعملاء المحظورين",
-                        "إدارة المستحقات والرصيد"
-                    )
-                )
-
-                // Section 5: فئات الخروج ومستودع المخزون
-                HelpSection(
-                    sectionId = "section_5",
-                    title = "فئات الخروج ومستودع المخزون",
-                    icon = Icons.Outlined.Warehouse,
-                    expandedSections = expandedSections,
-                    onToggle = { sectionId ->
-                        expandedSections = if (expandedSections.contains(sectionId)) {
-                            expandedSections - sectionId
-                        } else {
-                            expandedSections + sectionId
-                        }
-                    },
-                    content = listOf(
-                        "إعداد الفئات المالية والعمولة",
-                        "الاستيراد الجماعي للمخزون",
-                        "منع البيع المرجود والحجز الدائم",
-                        "إدارة المستويات والكميات"
-                    )
-                )
-
-                // Section 6: نقاط البيع والتسويات والتحصيل
-                HelpSection(
-                    sectionId = "section_6",
-                    title = "نقاط البيع والتسويات والتحصيل",
-                    icon = Icons.Outlined.Store,
-                    expandedSections = expandedSections,
-                    onToggle = { sectionId ->
-                        expandedSections = if (expandedSections.contains(sectionId)) {
-                            expandedSections - sectionId
-                        } else {
-                            expandedSections + sectionId
-                        }
-                    },
-                    content = listOf(
-                        "حسابات نقاط البيع وتراكم المستحقات",
-                        "تسجيل التسويات المالية والتحصيلات",
-                        "تصدير وبيع ومشاركة كشف الحساب",
-                        "إغلاق الحسابات وتصفية المبالغ"
-                    )
+            Text(
+                text = "تحتاج مساعدة إضافية؟",
+                color = titleColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            TextButton(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "تواصل مع فريق الدعم",
+                    color = BrandPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
-
-        // Bottom Navigation
-        HelpCenterBottomNav(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
 @Composable
 private fun HelpSection(
-    sectionId: String,
     title: String,
-    icon: androidx.compose.material.icons.materialIcon,
-    expandedSections: Set<String>,
-    onToggle: (String) -> Unit,
-    content: List<String>
+    icon: androidx.compose.material.icons.Icons.Outlined,
+    items: List<String>,
+    isLight: Boolean,
+    description: String = ""
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onToggle(sectionId) },
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-            border = BorderStroke(1.dp, Color(0xFF333333)),
-            shape = RoundedCornerShape(12.dp)
+    var expanded by remember { mutableStateOf(false) }
+    val containerColor = if (isLight) BrandSurface else BrandSurfaceVariant
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = containerColor)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = !expanded }
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = Color(0xFF1A9B8E),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = BrandPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     Text(
                         text = title,
-                        color = Color.White,
-                        fontSize = 14.sp,
+                        color = if (isLight) Color(0xFF111111) else Color(0xFFFFFFFF),
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                }
-                
-                Icon(
-                    imageVector = if (expandedSections.contains(sectionId)) 
-                        Icons.Outlined.ExpandLess 
-                    else 
-                        Icons.Outlined.ExpandMore,
-                    contentDescription = null,
-                    tint = Color(0xFF808080),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
 
-        if (expandedSections.contains(sectionId)) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                content.forEachIndexed { index, item ->
-                    HelpContentItem(
-                        number = index + 1,
-                        text = item
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .then(
+                                Modifier.then(
+                                    androidx.compose.ui.draw.rotate(
+                                        if (expanded) 90f else 0f
+                                    )
+                                )
+                            )
                     )
                 }
+
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = fadeIn(tween(180)) + expandVertically(),
+                    exit = fadeOut(tween(150)) + androidx.compose.animation.shrinkVertically()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (description.isNotBlank()) {
+                            Text(
+                                text = description,
+                                color = if (isLight) Color(0xFF444444) else TextSecondary,
+                                fontSize = 13.sp,
+                                lineHeight = 18.sp
+                            )
+                        }
+
+                        items.forEachIndexed { index, item ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .background(
+                                            color = if (isLight) Color(0xFFF0FDFA) else Color(0xFF042F2E),
+                                            shape = RoundedCornerShape(6.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${index + 1}",
+                                        color = BrandPrimary,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Text(
+                                    text = item,
+                                    color = if (isLight) Color(0xFF444444) else TextSecondary,
+                                    fontSize = 14.sp,
+                                    lineHeight = 20.sp,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun HelpContentItem(
-    number: Int,
-    text: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)),
-        border = BorderStroke(1.dp, Color(0xFF333333)),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(
-                        Color(0xFF1A9B8E).copy(alpha = 0.2f),
-                        RoundedCornerShape(6.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = number.toString(),
-                    color = Color(0xFF1A9B8E),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            Text(
-                text = text,
-                color = Color(0xFFB0B0B0),
-                fontSize = 13.sp,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Start
-            )
-        }
-    }
-}
-
-@Composable
-private fun HelpCenterBottomNav(
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)),
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        border = BorderStroke(1.dp, Color(0xFF333333))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavItem("الكروت", Icons.Outlined.CreditCard)
-            NavItem("الحسابات", Icons.Outlined.AccountBox)
-            NavItem("العروض", Icons.Outlined.LocalOffer)
-            NavItem("التقارير", Icons.Outlined.Assessment)
-            NavItem("الرئيسية", Icons.Outlined.Home)
-        }
-    }
-}
-
-@Composable
-private fun NavItem(
-    label: String,
-    icon: androidx.compose.material.icons.materialIcon,
-    isSelected: Boolean = false
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = label,
-            color = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
     }
 }

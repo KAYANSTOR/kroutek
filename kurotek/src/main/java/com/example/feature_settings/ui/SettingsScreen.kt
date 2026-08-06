@@ -1,297 +1,154 @@
 package com.example.feature_settings.ui
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Help
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.MainViewModel
+import com.example.ui.SettingsViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
-    onNavigateToHelpCenter: () -> Unit = {},
-    onNavigateToHome: () -> Unit = {}
+fun SettingsTab(
+    mainViewModel: MainViewModel,
+    authViewModel: com.example.ui.AuthViewModel,
+    settingsViewModel: SettingsViewModel,
+    distributorViewModel: com.example.ui.DistributorViewModel,
+    onLogout: () -> Unit
 ) {
-    var expandedItems by remember { mutableStateOf(setOf<String>()) }
+    val darkTheme by mainViewModel.isDarkTheme.collectAsState()
+    SettingsScreenV2()
+}
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF1A1A1A))
-            .testTag("settings_screen")
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 80.dp)
-        ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF222222))
-                    .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "الإعدادات",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable { onNavigateToHome() }
-                    )
-                }
-            }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreenV2() {
+    val primaryTeal = Color(0xFF1A9B8E)
+    val surfaceLight = Color(0xFFF5F5F5)
+    val textDark = Color(0xFF000000)
+    val textGray = Color(0xFF666666)
+    val goldColor = Color(0xFFFFD700)
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Database Section
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopAppBar(
+                title = { Text("الإعدادات", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = textDark)
+            )
+
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 SettingsSection(
-                    title = "البيانات والنظام",
-                    isExpanded = expandedItems.contains("database"),
-                    onToggle = {
-                        expandedItems = if (expandedItems.contains("database")) {
-                            expandedItems - "database"
-                        } else {
-                            expandedItems + "database"
-                        }
-                    },
+                    title = "بيانات وصيانة النظام",
                     items = listOf(
-                        "حجم قاعدة البيانات: 0.10 ميجابايت",
-                        "تصدير الحسابات (CSV)",
-                        "تنظيف السجلات وتفريغ المساحة",
-                        "تنظيف عميق للنظام"
-                    )
+                        SettingsItem(icon = Icons.Outlined.Storage, title = "حجم قاعدة البيانات الحالية", subtitle = "0.10 ميجابايت", color = primaryTeal),
+                        SettingsItem(icon = Icons.Outlined.Download, title = "تصدير دفتر الحسابات (CSV)", subtitle = "حفظ نسخة احتياطية من العمليات بصيغة ملف جدول البيانات", color = primaryTeal),
+                        SettingsItem(icon = Icons.Outlined.Delete, title = "تنظيف السجلات وتفريغ المساحة", subtitle = "إزالة السجلات التلقائية أو تنظيف البيانات الموقوتة", color = goldColor),
+                        SettingsItem(icon = Icons.Outlined.Settings, title = "تنظيف عميق للنظام", subtitle = "إعادة بناء قواعد البيانات لتحرير المساحة وتسريع الأداء", color = goldColor)
+                    ),
+                    primaryTeal
                 )
 
-                // Help Section
                 SettingsSection(
                     title = "المساعدة",
-                    isExpanded = expandedItems.contains("help"),
-                    onToggle = {
-                        expandedItems = if (expandedItems.contains("help")) {
-                            expandedItems - "help"
-                        } else {
-                            expandedItems + "help"
-                        }
-                    },
                     items = listOf(
-                        "مركز المساعدة",
-                        "حول التطبيق",
-                        "سياسة الخصوصية"
+                        SettingsItem(icon = Icons.Outlined.Help, title = "مركز المساعدة", subtitle = "دليل الاستخدام والأسئلة الشائعة", color = primaryTeal)
                     ),
-                    onHelpCenterClick = onNavigateToHelpCenter
+                    primaryTeal
                 )
+
+                SettingsSection(
+                    title = "عن التطبيق",
+                    items = listOf(
+                        SettingsItem(icon = Icons.Outlined.Info, title = "Z Net", subtitle = "الإصدار 1.0.1", color = primaryTeal),
+                        SettingsItem(icon = Icons.Outlined.Person, title = "المطور", subtitle = "دروبش عبدالله\nالهاتف: 779776919", color = primaryTeal),
+                        SettingsItem(icon = null, title = "الحقوق", subtitle = "© Z Net 2026 جميع الحقوق محفوظة", color = Color.Transparent)
+                    ),
+                    primaryTeal
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
-
-        // Bottom Navigation
-        SettingsBottomNav(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
-@Composable
-private fun SettingsSection(
-    title: String,
-    isExpanded: Boolean,
-    onToggle: () -> Unit,
-    items: List<String>,
-    onHelpCenterClick: (() -> Unit)? = null
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onToggle() },
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
-            border = BorderStroke(1.dp, Color(0xFF333333)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = if (title == "البيانات والنظام") 
-                            Icons.Outlined.Storage 
-                        else 
-                            Icons.Outlined.Help,
-                        contentDescription = null,
-                        tint = Color(0xFF1A9B8E),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = title,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Icon(
-                    imageVector = if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                    contentDescription = null,
-                    tint = Color(0xFF808080),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
+data class SettingsItem(
+    val icon: ImageVector? = null,
+    val title: String,
+    val subtitle: String,
+    val color: Color
+)
 
-        if (isExpanded) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+@Composable
+private fun SettingsSection(title: String, items: List<SettingsItem>, primaryColor: Color) {
+    val textDark = Color(0xFF000000)
+    val textGray = Color(0xFF666666)
+    val surfaceLight = Color(0xFFF5F5F5)
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = primaryColor, modifier = Modifier.padding(horizontal = 8.dp))
+
+        items.forEach { item ->
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable {}.height(if (item.subtitle.contains("\n")) 100.dp else 70.dp),
+                colors = CardDefaults.cardColors(containerColor = surfaceLight),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                items.forEach { item ->
-                    SettingsItem(
-                        text = item,
-                        onClick = {
-                            if (item == "مركز المساعدة" && onHelpCenterClick != null) {
-                                onHelpCenterClick()
-                            }
+                Row(modifier = Modifier.fillMaxSize().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (item.icon != null) {
+                        Box(modifier = Modifier.size(50.dp).background(color = item.color.copy(alpha = 0.2f), shape = CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(imageVector = item.icon, contentDescription = null, tint = item.color, modifier = Modifier.size(24.dp))
                         }
-                    )
+                    }
+
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.End) {
+                        Text(text = item.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = textDark, textAlign = TextAlign.Right)
+                        Text(text = item.subtitle, fontSize = 11.sp, color = textGray, textAlign = TextAlign.Right, lineHeight = 15.sp)
+                    }
+
+                    Icon(imageVector = Icons.Outlined.ChevronLeft, contentDescription = null, tint = textGray, modifier = Modifier.size(20.dp))
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SettingsItem(
-    text: String,
-    onClick: () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)),
-        border = BorderStroke(1.dp, Color(0xFF333333)),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = text,
-                color = Color(0xFFB0B0B0),
-                fontSize = 13.sp,
-                modifier = Modifier.weight(1f)
-            )
-            
-            if (text == "مركز المساعدة") {
-                Icon(
-                    imageVector = Icons.Outlined.ChevronRight,
-                    contentDescription = null,
-                    tint = Color(0xFF1A9B8E),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingsBottomNav(
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)),
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        border = BorderStroke(1.dp, Color(0xFF333333))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavItem("الكروت", Icons.Outlined.CreditCard)
-            NavItem("الحسابات", Icons.Outlined.AccountBox)
-            NavItem("العروض", Icons.Outlined.LocalOffer)
-            NavItem("التقارير", Icons.Outlined.Assessment)
-            NavItem("الرئيسية", Icons.Outlined.Home)
-        }
-    }
-}
-
-@Composable
-private fun NavItem(
-    label: String,
-    icon: androidx.compose.material.icons.materialIcon,
-    isSelected: Boolean = false
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = label,
-            color = if (isSelected) Color(0xFF1A9B8E) else Color(0xFF808080),
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
     }
 }

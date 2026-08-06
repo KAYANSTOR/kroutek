@@ -49,7 +49,7 @@ object SecurityApiService {
     
     // Configurable production backend API Base URL
     // In production, change this to your secure HTTPS VPS server address.
-    private const val BASE_URL = "https://kroutek.onrender.com/" 
+    private const val BASE_URL = "https://kayan-licensing-server.onrender.com/" 
     
     // HMAC Secret Key is now securely loaded via BuildConfig (from .env file)
     private val HMAC_SECRET: String
