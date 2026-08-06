@@ -76,11 +76,7 @@ jobs:
         run: ./gradlew :kurotek:assembleDebug --stacktrace --no-daemon
 
       - name: Build release APK if secrets are available
-        if: |
-          secrets.KEYSTORE_BASE64 != '' &&
-          secrets.KEY_ALIAS != '' &&
-          secrets.STORE_PASSWORD != '' &&
-          secrets.KEY_PASSWORD != ''
+        if: ${{ secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_PASSWORD != '' }}
         run: |
           mkdir -p keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/upload.jks
@@ -98,11 +94,7 @@ jobs:
           retention-days: 30
 
       - name: Upload release APK if built
-        if: |
-          secrets.KEYSTORE_BASE64 != '' &&
-          secrets.KEY_ALIAS != '' &&
-          secrets.STORE_PASSWORD != '' &&
-          secrets.KEY_PASSWORD != ''
+        if: ${{ secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_PASSWORD != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: kurotek-release-apk
@@ -138,11 +130,7 @@ jobs:
           retention-days: 30
 
       - name: Upload mapping file if release built
-        if: |
-          secrets.KEYSTORE_BASE64 != '' &&
-          secrets.KEY_ALIAS != '' &&
-          secrets.STORE_PASSWORD != '' &&
-          secrets.KEY_PASSWORD != ''
+        if: ${{ secrets.KEYSTORE_BASE64 != '' && secrets.KEY_ALIAS != '' && secrets.STORE_PASSWORD != '' && secrets.KEY_PASSWORD != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: kurotek-release-mapping
