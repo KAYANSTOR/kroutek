@@ -1,5 +1,6 @@
 plugins {
   alias(libs.plugins.android.application)
+  id("org.jetbrains.kotlin.android") version "2.0.0"
   id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.secrets)
