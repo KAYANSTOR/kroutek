@@ -1,13 +1,9 @@
 plugins {
   alias(libs.plugins.android.application)
-  alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.secrets)
   alias(libs.plugins.hilt.android)
-}
-
-kotlin {
-  jvmToolchain(17)
 }
 
 android {
