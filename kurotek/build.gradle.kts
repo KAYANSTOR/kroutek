@@ -7,6 +7,10 @@ plugins {
   alias(libs.plugins.hilt.android)
 }
 
+kotlin {
+  jvmToolchain(17)
+}
+
 android {
   namespace = "com.example"
   compileSdk = 35
